@@ -15,5 +15,5 @@ app.use('/api', presensiRoutes);
 
 // Cek koneksi server
 app.listen(PORT, () => {
-    console.log(`🚀 Server Backend "SikSayangIbu" berjalan di http://localhost:${PORT}`);
+    console.log(`🚀 Server Backend "rekap-presensi" berjalan di http://localhost:${PORT}`);
 });

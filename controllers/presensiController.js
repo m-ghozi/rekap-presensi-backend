@@ -1,12 +1,14 @@
 const db = require('../config/database');
+const exportService = require('../services/exportService');
 
 const getRekapPresensi = async (req, res) => {
     try {
         const query = `
-            SELECT id, shift, jam_datang, jam_pulang, status, 
-            keterlambatan, durasi, keterangan, LEFT(photo, 256) as photo_preview 
-            FROM rekap_presensi 
-            ORDER BY jam_datang DESC, jam_pulang ASC, keterangan ASC 
+            SELECT pegawai.nama AS nama_pegawai, rekap_presensi.shift, rekap_presensi.jam_datang, rekap_presensi.jam_pulang, rekap_presensi.status, 
+            rekap_presensi.keterlambatan, rekap_presensi.durasi, rekap_presensi.keterangan, LEFT(rekap_presensi.photo, 256) as photo_preview 
+            FROM rekap_presensi
+            JOIN pegawai ON rekap_presensi.id = pegawai.id
+            ORDER BY rekap_presensi.jam_datang DESC, rekap_presensi.jam_pulang ASC, rekap_presensi.keterangan ASC 
             LIMIT 1000
         `;
         const [rows] = await db.query(query);
@@ -25,7 +27,46 @@ const getTableStatus = async (req, res) => {
     }
 };
 
+// Fungsi BARU untuk download
+const downloadExcel = async (req, res) => {
+    try {
+        const { startDate, endDate } = req.query;
+        
+        let query = `SELECT pegawai.nama AS nama_pegawai, rekap_presensi.shift, rekap_presensi.jam_datang, rekap_presensi.jam_pulang, rekap_presensi.status, 
+                       rekap_presensi.keterlambatan, rekap_presensi.durasi, rekap_presensi.keterangan FROM rekap_presensi
+                       JOIN pegawai ON rekap_presensi.id = pegawai.id`;
+        const queryParams = [];
+
+        if (startDate && endDate) {
+            query += ` WHERE DATE(rekap_presensi.jam_datang) BETWEEN ? AND ?`;
+            queryParams.push(startDate, endDate);
+        } else if (startDate) {
+            query += ` WHERE DATE(rekap_presensi.jam_datang) >= ?`;
+            queryParams.push(startDate);
+        } else if (endDate) {
+            query += ` WHERE DATE(rekap_presensi.jam_datang) <= ?`;
+            queryParams.push(endDate);
+        }
+
+        query += ` ORDER BY rekap_presensi.jam_datang DESC LIMIT 1000`;
+
+        const [rows] = await db.query(query, queryParams);
+
+        const excelBuffer = await exportService.generateExcel(rows);
+
+        // Header agar browser mengenali ini sebagai file Excel untuk diunduh
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', 'attachment; filename=rekap_presensi.xlsx');
+
+        res.send(excelBuffer);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: "Gagal membuat file Excel" });
+    }
+};
+
 module.exports = {
     getRekapPresensi,
-    getTableStatus
+    getTableStatus,
+    downloadExcel
 };
