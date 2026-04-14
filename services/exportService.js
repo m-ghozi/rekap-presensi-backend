@@ -7,9 +7,19 @@ const generateExcel = async (data) => {
     // Menentukan header kolom Excel sesuai dengan field database Anda
     worksheet.columns = [
         { header: 'Nama Pegawai', key: 'nama_pegawai', width: 35 },
-        { header: 'Shift', key: 'shift', width: 30 },
-        { header: 'Jam Datang', key: 'jam_datang', width: 25 },
-        { header: 'Jam Pulang', key: 'jam_pulang', width: 25 },
+        { header: 'Shift', key: 'shift', width: 20 },
+        {
+            header: 'Jam Datang',
+            key: 'jam_datang',
+            width: 20,
+            style: { numFmt: 'mm/dd/yyyy hh:mm:ss' }
+        },
+        {
+            header: 'Jam Pulang',
+            key: 'jam_pulang',
+            width: 20,
+            style: { numFmt: 'mm/dd/yyyy hh:mm:ss' }
+        },
         { header: 'Status', key: 'status', width: 15 },
         { header: 'Keterlambatan', key: 'keterlambatan', width: 15 },
         { header: 'Durasi', key: 'durasi', width: 10 },
