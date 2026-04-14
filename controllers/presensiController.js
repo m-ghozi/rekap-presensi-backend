@@ -6,10 +6,13 @@ const getRekapPresensi = async (req, res) => {
         const { startDate, endDate, name } = req.query;
         
         let query = `
-            SELECT pegawai.nama AS nama_pegawai, rekap_presensi.shift, rekap_presensi.jam_datang, rekap_presensi.jam_pulang, rekap_presensi.status, 
+            SELECT pegawai.nama AS nama_pegawai, 
+            CONCAT(rekap_presensi.shift, ' (', TIME_FORMAT(jam_masuk.jam_masuk, '%H:%i'), ' - ', TIME_FORMAT(jam_masuk.jam_pulang, '%H:%i'), ')') AS shift, 
+            rekap_presensi.jam_datang, rekap_presensi.jam_pulang, rekap_presensi.status, 
             rekap_presensi.keterlambatan, rekap_presensi.durasi, rekap_presensi.keterangan 
             FROM rekap_presensi
             JOIN pegawai ON rekap_presensi.id = pegawai.id
+            LEFT JOIN jam_masuk ON rekap_presensi.shift = jam_masuk.shift
             WHERE 1=1
         `;
         const queryParams = [];
@@ -53,9 +56,12 @@ const downloadExcel = async (req, res) => {
     try {
         const { startDate, endDate, name } = req.query;
         
-        let query = `SELECT pegawai.nama AS nama_pegawai, rekap_presensi.shift, rekap_presensi.jam_datang, rekap_presensi.jam_pulang, rekap_presensi.status, 
+        let query = `SELECT pegawai.nama AS nama_pegawai, 
+                       CONCAT(rekap_presensi.shift, ' (', TIME_FORMAT(jam_masuk.jam_masuk, '%H:%i'), ' - ', TIME_FORMAT(jam_masuk.jam_pulang, '%H:%i'), ')') AS shift, 
+                       rekap_presensi.jam_datang, rekap_presensi.jam_pulang, rekap_presensi.status, 
                        rekap_presensi.keterlambatan, rekap_presensi.durasi, rekap_presensi.keterangan FROM rekap_presensi
                        JOIN pegawai ON rekap_presensi.id = pegawai.id
+                       LEFT JOIN jam_masuk ON rekap_presensi.shift = jam_masuk.shift
                        WHERE 1=1`;
         const queryParams = [];
 
