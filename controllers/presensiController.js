@@ -3,15 +3,36 @@ const exportService = require('../services/exportService');
 
 const getRekapPresensi = async (req, res) => {
     try {
-        const query = `
+        const { startDate, endDate, name } = req.query;
+        
+        let query = `
             SELECT pegawai.nama AS nama_pegawai, rekap_presensi.shift, rekap_presensi.jam_datang, rekap_presensi.jam_pulang, rekap_presensi.status, 
-            rekap_presensi.keterlambatan, rekap_presensi.durasi, rekap_presensi.keterangan, LEFT(rekap_presensi.photo, 256) as photo_preview 
+            rekap_presensi.keterlambatan, rekap_presensi.durasi, rekap_presensi.keterangan 
             FROM rekap_presensi
             JOIN pegawai ON rekap_presensi.id = pegawai.id
-            ORDER BY rekap_presensi.jam_datang DESC, rekap_presensi.jam_pulang ASC, rekap_presensi.keterangan ASC 
-            LIMIT 1000
+            WHERE 1=1
         `;
-        const [rows] = await db.query(query);
+        const queryParams = [];
+
+        if (startDate && endDate) {
+            query += ` AND DATE(rekap_presensi.jam_datang) BETWEEN ? AND ?`;
+            queryParams.push(startDate, endDate);
+        } else if (startDate) {
+            query += ` AND DATE(rekap_presensi.jam_datang) >= ?`;
+            queryParams.push(startDate);
+        } else if (endDate) {
+            query += ` AND DATE(rekap_presensi.jam_datang) <= ?`;
+            queryParams.push(endDate);
+        }
+
+        if (name) {
+            query += ` AND pegawai.nama LIKE ?`;
+            queryParams.push(`%${name}%`);
+        }
+
+        query += ` ORDER BY rekap_presensi.jam_datang DESC, rekap_presensi.jam_pulang ASC, rekap_presensi.keterangan ASC LIMIT 1000`;
+        
+        const [rows] = await db.query(query, queryParams);
         res.json({ success: true, data: rows });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
@@ -30,22 +51,28 @@ const getTableStatus = async (req, res) => {
 // Fungsi BARU untuk download
 const downloadExcel = async (req, res) => {
     try {
-        const { startDate, endDate } = req.query;
+        const { startDate, endDate, name } = req.query;
         
         let query = `SELECT pegawai.nama AS nama_pegawai, rekap_presensi.shift, rekap_presensi.jam_datang, rekap_presensi.jam_pulang, rekap_presensi.status, 
                        rekap_presensi.keterlambatan, rekap_presensi.durasi, rekap_presensi.keterangan FROM rekap_presensi
-                       JOIN pegawai ON rekap_presensi.id = pegawai.id`;
+                       JOIN pegawai ON rekap_presensi.id = pegawai.id
+                       WHERE 1=1`;
         const queryParams = [];
 
         if (startDate && endDate) {
-            query += ` WHERE DATE(rekap_presensi.jam_datang) BETWEEN ? AND ?`;
+            query += ` AND DATE(rekap_presensi.jam_datang) BETWEEN ? AND ?`;
             queryParams.push(startDate, endDate);
         } else if (startDate) {
-            query += ` WHERE DATE(rekap_presensi.jam_datang) >= ?`;
+            query += ` AND DATE(rekap_presensi.jam_datang) >= ?`;
             queryParams.push(startDate);
         } else if (endDate) {
-            query += ` WHERE DATE(rekap_presensi.jam_datang) <= ?`;
+            query += ` AND DATE(rekap_presensi.jam_datang) <= ?`;
             queryParams.push(endDate);
+        }
+
+        if (name) {
+            query += ` AND pegawai.nama LIKE ?`;
+            queryParams.push(`%${name}%`);
         }
 
         query += ` ORDER BY rekap_presensi.jam_datang DESC LIMIT 1000`;

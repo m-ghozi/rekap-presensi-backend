@@ -6,15 +6,14 @@ const generateExcel = async (data) => {
 
     // Menentukan header kolom Excel sesuai dengan field database Anda
     worksheet.columns = [
-        { header: 'Nama Pegawai', key: 'nama_pegawai', width: 25 },
+        { header: 'Nama Pegawai', key: 'nama_pegawai', width: 35 },
         { header: 'Shift', key: 'shift', width: 15 },
-        { header: 'Jam Datang', key: 'jam_datang', width: 25 },
-        { header: 'Jam Pulang', key: 'jam_pulang', width: 25 },
+        { header: 'Jam Datang', key: 'jam_datang', width: 15 },
+        { header: 'Jam Pulang', key: 'jam_pulang', width: 15 },
         { header: 'Status', key: 'status', width: 15 },
         { header: 'Keterlambatan', key: 'keterlambatan', width: 15 },
-        { header: 'Durasi', key: 'durasi', width: 15 },
-        { header: 'Keterangan', key: 'keterangan', width: 30 },
-        { header: 'Photo (Preview)', key: 'photo_preview', width: 40 },
+        { header: 'Durasi', key: 'durasi', width: 10 },
+        { header: 'Keterangan', key: 'keterangan', width: 55 },
     ];
 
     // Styling Header agar lebih profesional (Bold & Background Warna)
