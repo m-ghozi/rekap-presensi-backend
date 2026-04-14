@@ -98,8 +98,31 @@ const downloadExcel = async (req, res) => {
     }
 };
 
+// Tambahkan fungsi ini di presensiController.js
+const getTodayPresensi = async (req, res) => {
+    try {
+        const query = `
+            SELECT pegawai.nama AS nama_pegawai, 
+            CONCAT(rekap_presensi.shift, ' (', TIME_FORMAT(jam_masuk.jam_masuk, '%H:%i'), ' - ', TIME_FORMAT(jam_masuk.jam_pulang, '%H:%i'), ')') AS shift, 
+            rekap_presensi.jam_datang, rekap_presensi.jam_pulang, rekap_presensi.status, 
+            rekap_presensi.keterlambatan, rekap_presensi.durasi, rekap_presensi.keterangan 
+            FROM rekap_presensi
+            JOIN pegawai ON rekap_presensi.id = pegawai.id
+            LEFT JOIN jam_masuk ON rekap_presensi.shift = jam_masuk.shift
+            WHERE DATE(rekap_presensi.jam_datang) = CURDATE()
+            ORDER BY rekap_presensi.jam_datang DESC
+        `;
+        
+        const [rows] = await db.query(query);
+        res.json({ success: true, data: rows });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
 module.exports = {
     getRekapPresensi,
     getTableStatus,
-    downloadExcel
+    downloadExcel,
+    getTodayPresensi
 };
