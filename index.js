@@ -13,7 +13,7 @@ const API_KEY = process.env.X_API_KEY;
 app.use(cors({
     origin: 'http://localhost:5173',
     methods: ['GET', 'POST'],
-    allowedHeaders: ['Content-Type', 'Authorization']
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-API-KEY']
 }));
 app.use(helmet())
 app.use(express.json());
