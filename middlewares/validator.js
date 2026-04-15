@@ -33,4 +33,38 @@ const validatePresensiQuery = [
   }
 ];
 
-module.exports = { validatePresensiQuery };
+const validateJadwalQuery = [
+  query('bulan')
+    .optional({ checkFalsy: true })
+    .isInt({ min: 1, max: 12 })
+    .withMessage('Bulan harus berupa angka 1 sampai 12'),
+
+  query('tahun')
+    .optional({ checkFalsy: true })
+    .isInt({ min: 2000, max: 2100 })
+    .withMessage('Tahun harus berupa angka tahun yang valid (2000-2100)'),
+
+  query('tanggal')
+    .optional({ checkFalsy: true })
+    .isInt({ min: 1, max: 31 })
+    .withMessage('Tanggal harus berupa angka 1 sampai 31'),
+
+  query('name')
+    .optional({ checkFalsy: true })
+    .isString()
+    .withMessage('Pencarian nama harus berupa teks'),
+
+  // Middleware pengecekan hasil
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        errors: errors.array().map(err => ({ field: err.path, message: err.msg }))
+      });
+    }
+    next();
+  }
+];
+
+module.exports = { validatePresensiQuery, validateJadwalQuery };

@@ -1,10 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const jadwalController = require('../controllers/jadwalController');
-// Jika Anda menggunakan validator, import di sini
-// const { validateJadwalQuery } = require('../middlewares/validator'); 
+const { validateJadwalQuery } = require('../middlewares/validator');
 
-router.get('/', jadwalController.getJadwalPegawai);
-router.get('/today', jadwalController.getTodayJadwal);
+router.get('/', validateJadwalQuery, jadwalController.getJadwalPegawai);
+router.get('/today', validateJadwalQuery, jadwalController.getTodayJadwal);
 
 module.exports = router;
