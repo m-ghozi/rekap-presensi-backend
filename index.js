@@ -38,7 +38,7 @@ const limiter = rateLimit({
 
 // Routes
 app.use('/api/presensi', limiter, apiKeyMiddleware, presensiRoutes)
-app.use('/api/jadwal', limiter, jadwalRoutes);
+app.use('/api/jadwal', limiter,apiKeyMiddleware, jadwalRoutes);
 
 // Cek koneksi server
 app.listen(PORT, () => {
