@@ -4,6 +4,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const presensiRoutes = require('./routes/presensiRoutes');
+const jadwalRoutes = require('./routes/jadwalRoutes')
 
 const app = express();
 const PORT = process.env.PORT;
@@ -36,7 +37,8 @@ const limiter = rateLimit({
 });
 
 // Routes
-app.use('/api', limiter, apiKeyMiddleware, presensiRoutes);
+app.use('/api/presensi', limiter, apiKeyMiddleware, presensiRoutes)
+app.use('/api/jadwal', limiter, jadwalRoutes);
 
 // Cek koneksi server
 app.listen(PORT, () => {
