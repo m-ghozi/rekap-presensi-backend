@@ -18,6 +18,8 @@ app.use(cors({
 app.use(helmet())
 app.use(express.json());
 
+app.set('trust proxy', 0);
+
 const apiKeyMiddleware = (req, res, next) => {
     const userApiKey = req.header('X-API-KEY');
     if (userApiKey && userApiKey === API_KEY) {

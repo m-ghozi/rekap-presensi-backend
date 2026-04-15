@@ -12,13 +12,13 @@ const generateExcel = async (data) => {
             header: 'Jam Datang',
             key: 'jam_datang',
             width: 20,
-            style: { numFmt: 'mm/dd/yyyy hh:mm:ss' }
+            style: { numFmt: 'dd/mm/yyyy hh:mm:ss' }
         },
         {
             header: 'Jam Pulang',
             key: 'jam_pulang',
             width: 20,
-            style: { numFmt: 'mm/dd/yyyy hh:mm:ss' }
+            style: { numFmt: 'dd/mm/yyyy hh:mm:ss' }
         },
         { header: 'Status', key: 'status', width: 15 },
         { header: 'Keterlambatan', key: 'keterlambatan', width: 15 },
@@ -30,8 +30,25 @@ const generateExcel = async (data) => {
     worksheet.getRow(1).font = { bold: true };
     worksheet.getRow(1).alignment = { vertical: 'middle', horizontal: 'center' };
 
-    // Menambahkan data ke dalam baris Excel
-    worksheet.addRows(data);
+    data.forEach(item => {
+        const row = { ...item };
+
+        // Tambahkan offset 7 jam (WIB) jika data berupa Date agar ExcelJS menampilkannya dengan benar
+        if (row.jam_datang) {
+            const dt = new Date(row.jam_datang);
+            // Menambah 7 jam ke objek date
+            row.jam_datang = new Date(dt.getTime() + (7 * 60 * 60 * 1000));
+        }
+
+        if (row.jam_pulang) {
+            const dp = new Date(row.jam_pulang);
+            // Menambah 7 jam ke objek date
+            row.jam_pulang = new Date(dp.getTime() + (7 * 60 * 60 * 1000));
+        }
+
+        // Menambahkan data ke dalam baris Excel
+        worksheet.addRow(row);
+    });
 
     // Menghasilkan buffer (data biner) untuk dikirim ke browser
     const buffer = await workbook.xlsx.writeBuffer();
