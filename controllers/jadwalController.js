@@ -11,15 +11,19 @@ const getJadwalPegawai = async (req, res) => {
     // Jika filter 'tanggal' (1-31) diisi, kita hanya ambil kolom spesifik (misal h15)
     // Jika tidak, kita ambil seluruh kolom jadwal_pegawai.*
     let selectColumn = "jadwal_pegawai.*";
+    let joinJamMasuk = "";
+    
     if (tanggal) {
       const dayCol = `h${parseInt(tanggal)}`;
-      selectColumn = `pegawai.nama AS nama_pegawai, jadwal_pegawai.${dayCol} AS shift_tanggal_${tanggal}`;
+      selectColumn = `jadwal_pegawai.${dayCol} AS shift_tanggal_${tanggal}, jam_masuk.jam_masuk, jam_masuk.jam_pulang`;
+      joinJamMasuk = `LEFT JOIN jam_masuk ON jadwal_pegawai.${dayCol} = jam_masuk.shift`;
     }
 
     let query = `
             SELECT pegawai.nama AS nama_pegawai, ${selectColumn} 
             FROM jadwal_pegawai
             JOIN pegawai ON jadwal_pegawai.id = pegawai.id
+            ${joinJamMasuk}
             WHERE jadwal_pegawai.bulan = ? AND jadwal_pegawai.tahun = ?
         `;
 
@@ -48,9 +52,10 @@ const getTodayJadwal = async (req, res) => {
 
     // Gunakan JOIN yang sama untuk konsistensi nama pegawai
     const query = `
-            SELECT pegawai.nama AS nama_pegawai, jadwal_pegawai.${colName} AS shift_hari_ini
+            SELECT pegawai.nama AS nama_pegawai, jadwal_pegawai.${colName} AS shift_hari_ini, jam_masuk.jam_masuk, jam_masuk.jam_pulang
             FROM jadwal_pegawai
             JOIN pegawai ON jadwal_pegawai.id = pegawai.id
+            LEFT JOIN jam_masuk ON jadwal_pegawai.${colName} = jam_masuk.shift
             WHERE jadwal_pegawai.bulan = ? AND jadwal_pegawai.tahun = ?
         `;
 
