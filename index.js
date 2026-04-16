@@ -4,41 +4,42 @@ const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const presensiRoutes = require('./routes/presensiRoutes');
-const jadwalRoutes = require('./routes/jadwalRoutes')
+const jadwalRoutes = require('./routes/jadwalRoutes');
+const authRoutes = require('./routes/authRoutes');
+const { authenticateToken } = require('./middlewares/auth');
 
 const app = express();
 const PORT = process.env.PORT;
-const API_KEY = process.env.X_API_KEY;
 
 // Middleware
 app.use(cors({
     origin: 'http://localhost:5173',
     methods: ['GET', 'POST'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-API-KEY']
+    allowedHeaders: ['Content-Type', 'Authorization']
 }));
-app.use(helmet())
+app.use(helmet());
 app.use(express.json());
 
 app.set('trust proxy', 0);
 
-const apiKeyMiddleware = (req, res, next) => {
-    const userApiKey = req.header('X-API-KEY');
-    if (userApiKey && userApiKey === API_KEY) {
-        next();
-    } else {
-        res.status(403).json({ success: false, message: 'Unauthorized access' });
-    }
-};
-
+// Rate limiter umum untuk semua route API
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 100,
     message: 'Too many requests from this IP, please try again after 15 minutes'
 });
 
+// Rate limiter khusus login (lebih ketat, untuk cegah brute force)
+const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 10,
+    message: { success: false, message: 'Terlalu banyak percobaan login, coba lagi setelah 15 menit' }
+});
+
 // Routes
-app.use('/api/presensi', limiter, apiKeyMiddleware, presensiRoutes)
-app.use('/api/jadwal', limiter,apiKeyMiddleware, jadwalRoutes);
+app.use('/api/auth', loginLimiter, authRoutes);                              // Login (publik)
+app.use('/api/presensi', limiter, authenticateToken, presensiRoutes);        // Butuh JWT
+app.use('/api/jadwal', limiter, authenticateToken, jadwalRoutes);            // Butuh JWT
 
 // Cek koneksi server
 app.listen(PORT, () => {
