@@ -6,6 +6,7 @@ const rateLimit = require('express-rate-limit');
 const presensiRoutes = require('./routes/presensiRoutes');
 const jadwalRoutes = require('./routes/jadwalRoutes');
 const authRoutes = require('./routes/authRoutes');
+const laporanRoutes = require('./routes/laporanRoutes');
 const { authenticateToken } = require('./middlewares/auth');
 
 const app = express();
@@ -40,6 +41,7 @@ const loginLimiter = rateLimit({
 app.use('/api/auth', loginLimiter, authRoutes);                              // Login (publik)
 app.use('/api/presensi', limiter, authenticateToken, presensiRoutes);        // Butuh JWT
 app.use('/api/jadwal', limiter, authenticateToken, jadwalRoutes);            // Butuh JWT
+app.use('/api/laporan', limiter, authenticateToken, laporanRoutes);          // Butuh JWT
 
 // Cek koneksi server
 app.listen(PORT, () => {
