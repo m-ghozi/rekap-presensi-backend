@@ -1,4 +1,4 @@
-const db = require('../config/database');
+const jadwalModel = require('../models/jadwalModel');
 
 const getJadwalPegawai = async (req, res) => {
   try {
@@ -8,21 +8,10 @@ const getJadwalPegawai = async (req, res) => {
     const targetYear = tahun ? parseInt(tahun) : new Date().getFullYear();
 
     // 1. Ambil data jadwal dasar
-    let query = `
-      SELECT pegawai.nama AS nama_pegawai, jadwal_pegawai.* FROM jadwal_pegawai
-      JOIN pegawai ON jadwal_pegawai.id = pegawai.id
-      WHERE jadwal_pegawai.bulan = ? AND jadwal_pegawai.tahun = ?
-    `;
-    const params = [targetMonth, targetYear];
-    if (name) {
-      query += ` AND pegawai.nama LIKE ?`;
-      params.push(`%${name}%`);
-    }
-
-    const [jadwalRows] = await db.query(query, params);
+    const jadwalRows = await jadwalModel.getJadwalPegawaiData(targetMonth, targetYear, name);
 
     // 2. Ambil referensi jam & format ke hh:mm (buang detik)
-    const [jamRows] = await db.query("SELECT shift, jam_masuk, jam_pulang FROM jam_masuk");
+    const jamRows = await jadwalModel.getJamMasukData();
     const jamMap = {};
     jamRows.forEach(j => {
       // substring(0, 5) mengambil "HH:mm" dari "HH:mm:ss"
@@ -66,15 +55,7 @@ const getTodayJadwal = async (req, res) => {
   try {
     const today = new Date();
     const tgl = today.getDate();
-    const query = `
-      SELECT pegawai.nama AS nama_pegawai, jadwal_pegawai.h${tgl} AS shift_kode,
-      jam_masuk.jam_masuk, jam_masuk.jam_pulang
-      FROM jadwal_pegawai
-      JOIN pegawai ON jadwal_pegawai.id = pegawai.id
-      LEFT JOIN jam_masuk ON jadwal_pegawai.h${tgl} = jam_masuk.shift
-      WHERE jadwal_pegawai.bulan = ? AND jadwal_pegawai.tahun = ?
-    `;
-    const [rows] = await db.query(query, [today.getMonth() + 1, today.getFullYear()]);
+    const rows = await jadwalModel.getTodayJadwalData(today.getMonth() + 1, today.getFullYear(), tgl);
 
     const formattedRows = rows.map(r => ({
       ...r,
