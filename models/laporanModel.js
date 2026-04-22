@@ -3,7 +3,6 @@ const db = require('../config/database');
 const getRekapPenilaianData = async (startDate, endDate, name) => {
     let query = `
         SELECT 
-            p.id AS nik,
             p.nama AS nama_pegawai,
             -- Hitung total hari hadir (status selain 'Tidak Hadir')
             SUM(CASE WHEN rp.status IN ('Tepat Waktu', 'Terlambat I', 'Terlambat II') THEN 1 ELSE 0 END) AS total_hadir,
