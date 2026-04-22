@@ -1,4 +1,5 @@
 const jadwalModel = require('../models/jadwalModel');
+const exportService = require('../services/exportService');
 
 const getJadwalPegawai = async (req, res) => {
   try {
@@ -69,4 +70,45 @@ const getTodayJadwal = async (req, res) => {
   }
 };
 
-module.exports = { getJadwalPegawai, getTodayJadwal };
+const downloadJadwalExcel = async (req, res) => {
+  try {
+    const { bulan, tahun, name } = req.query;
+
+    const targetMonth = bulan ? parseInt(bulan) : new Date().getMonth() + 1;
+    const targetYear = tahun ? parseInt(tahun) : new Date().getFullYear();
+
+    const jadwalRows = await jadwalModel.getJadwalPegawaiData(targetMonth, targetYear, name);
+
+    const jamRows = await jadwalModel.getJamMasukData();
+    const jamMap = {};
+    jamRows.forEach(j => {
+      const masuk = j.jam_masuk ? j.jam_masuk.substring(0, 5) : '--:--';
+      const pulang = j.jam_pulang ? j.jam_pulang.substring(0, 5) : '--:--';
+      jamMap[j.shift] = `${masuk} - ${pulang}`;
+    });
+
+    const detailData = jadwalRows.map(row => {
+      const newRow = { ...row };
+      for (let i = 1; i <= 31; i++) {
+        const tglCol = `h${i}`;
+        const kode = row[tglCol];
+        if (kode && jamMap[kode]) {
+          newRow[tglCol] = `${kode}\n(${jamMap[kode]})`;
+        }
+      }
+      return newRow;
+    });
+
+    const excelBuffer = await exportService.generateJadwalExcel(detailData);
+
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename=jadwal_pegawai_${targetMonth}_${targetYear}.xlsx`);
+
+    res.send(excelBuffer);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: "Gagal membuat file Excel jadwal" });
+  }
+};
+
+module.exports = { getJadwalPegawai, getTodayJadwal, downloadJadwalExcel };
