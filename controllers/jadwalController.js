@@ -37,13 +37,29 @@ const getJadwalPegawai = async (req, res) => {
 
     // 4. Fitur filter tanggal spesifik (jika param 'tanggal' diisi)
     if (tanggal) {
-      const targetCol = `h${parseInt(tanggal)}`;
-      const filteredData = detailData.map(d => ({
-        id: d.id,
-        nama_pegawai: d.nama_pegawai,
-        [targetCol]: d[targetCol]
-      }));
-      return res.json({ success: true, data: filteredData });
+      let colsToKeep = [];
+      if (tanggal.includes('-')) {
+        const [startStr, endStr] = tanggal.split('-');
+        const start = parseInt(startStr);
+        const end = parseInt(endStr);
+        if (!isNaN(start) && !isNaN(end) && start <= end) {
+          for (let i = start; i <= end; i++) colsToKeep.push(`h${i}`);
+        }
+      } else {
+        const parsedTgl = parseInt(tanggal);
+        if (!isNaN(parsedTgl)) colsToKeep.push(`h${parsedTgl}`);
+      }
+
+      if (colsToKeep.length > 0) {
+        const filteredData = detailData
+          .filter(d => colsToKeep.some(col => d[col] && d[col].trim() !== '-' && d[col].trim() !== ''))
+          .map(d => {
+            const row = { id: d.id, nama_pegawai: d.nama_pegawai };
+            colsToKeep.forEach(col => row[col] = d[col]);
+            return row;
+          });
+        return res.json({ success: true, data: filteredData });
+      }
     }
 
     res.json({ success: true, data: detailData });
@@ -99,7 +115,32 @@ const downloadJadwalExcel = async (req, res) => {
       return newRow;
     });
 
-    const excelBuffer = await exportService.generateJadwalExcel(detailData);
+    let colsToKeep = [];
+    if (tanggal) {
+      if (tanggal.includes('-')) {
+        const [startStr, endStr] = tanggal.split('-');
+        const start = parseInt(startStr);
+        const end = parseInt(endStr);
+        if (!isNaN(start) && !isNaN(end) && start <= end) {
+          for (let i = start; i <= end; i++) colsToKeep.push(`h${i}`);
+        }
+      } else {
+        const parsedTgl = parseInt(tanggal);
+        if (!isNaN(parsedTgl)) colsToKeep.push(`h${parsedTgl}`);
+      }
+
+      if (colsToKeep.length > 0) {
+        detailData = detailData
+          .filter(d => colsToKeep.some(col => d[col] && d[col].trim() !== '-' && d[col].trim() !== ''))
+          .map(d => {
+            const row = { id: d.id, nama_pegawai: d.nama_pegawai };
+            colsToKeep.forEach(col => row[col] = d[col]);
+            return row;
+          });
+      }
+    }
+
+    const excelBuffer = await exportService.generateJadwalExcel(detailData, colsToKeep);
 
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', `attachment; filename=jadwal_pegawai_${targetMonth}_${targetYear}.xlsx`);

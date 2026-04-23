@@ -55,7 +55,7 @@ const generateExcel = async (data) => {
     return buffer;
 };
 
-const generateJadwalExcel = async (data) => {
+const generateJadwalExcel = async (data, colsToKeep = []) => {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Jadwal Pegawai');
 
@@ -64,13 +64,25 @@ const generateJadwalExcel = async (data) => {
         { header: 'Nama Pegawai', key: 'nama_pegawai', width: 35 },
     ];
 
-    for (let i = 1; i <= 31; i++) {
-        columns.push({
-            header: i.toString(),
-            key: `h${i}`,
-            width: 15,
-            style: { alignment: { wrapText: true, vertical: 'middle', horizontal: 'center' } }
+    if (colsToKeep && colsToKeep.length > 0) {
+        colsToKeep.forEach(col => {
+            const dayNum = col.replace('h', '');
+            columns.push({
+                header: dayNum,
+                key: col,
+                width: 25,
+                style: { alignment: { wrapText: true, vertical: 'middle', horizontal: 'center' } }
+            });
         });
+    } else {
+        for (let i = 1; i <= 31; i++) {
+            columns.push({
+                header: i.toString(),
+                key: `h${i}`,
+                width: 15,
+                style: { alignment: { wrapText: true, vertical: 'middle', horizontal: 'center' } }
+            });
+        }
     }
 
     worksheet.columns = columns;

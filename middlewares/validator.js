@@ -46,8 +46,27 @@ const validateJadwalQuery = [
 
   query('tanggal')
     .optional({ checkFalsy: true })
-    .isInt({ min: 1, max: 31 })
-    .withMessage('Tanggal harus berupa angka 1 sampai 31'),
+    .custom((value) => {
+      if (typeof value !== 'string' && typeof value !== 'number') return false;
+      const strVal = String(value);
+      if (strVal.includes('-')) {
+        const parts = strVal.split('-');
+        if (parts.length !== 2) throw new Error('Format range tanggal tidak valid');
+        const start = parseInt(parts[0]);
+        const end = parseInt(parts[1]);
+        if (isNaN(start) || isNaN(end)) throw new Error('Format range tanggal tidak valid');
+        if (start < 1 || end > 31 || start > end) {
+          throw new Error('Tanggal harus antara 1 sampai 31, dan batas awal harus <= batas akhir');
+        }
+        return true;
+      } else {
+        const parsed = parseInt(strVal);
+        if (isNaN(parsed) || parsed < 1 || parsed > 31) {
+          throw new Error('Tanggal harus berupa angka 1 sampai 31 atau range valid (misal: 1-5)');
+        }
+        return true;
+      }
+    }),
 
   query('name')
     .optional({ checkFalsy: true })
