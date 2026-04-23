@@ -88,7 +88,7 @@ const getTodayJadwal = async (req, res) => {
 
 const downloadJadwalExcel = async (req, res) => {
   try {
-    const { bulan, tahun, name } = req.query;
+    const { bulan, tahun, name, tanggal } = req.query;
 
     const targetMonth = bulan ? parseInt(bulan) : new Date().getMonth() + 1;
     const targetYear = tahun ? parseInt(tahun) : new Date().getFullYear();
@@ -103,7 +103,7 @@ const downloadJadwalExcel = async (req, res) => {
       jamMap[j.shift] = `${masuk} - ${pulang}`;
     });
 
-    const detailData = jadwalRows.map(row => {
+    let detailData = jadwalRows.map(row => {
       const newRow = { ...row };
       for (let i = 1; i <= 31; i++) {
         const tglCol = `h${i}`;
