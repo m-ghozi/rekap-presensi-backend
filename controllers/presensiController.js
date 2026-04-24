@@ -2,6 +2,14 @@ const presensiModel = require('../models/presensiModel');
 const jadwalModel   = require('../models/jadwalModel');
 const exportService = require('../services/exportService');
 
+const getLocalYYYYMMDD = (date) => {
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
+
 /**
  * Helper: gabungkan data presensi aktual dengan baris "Tidak Hadir"
  * untuk setiap (pegawai, tanggal) yang ada jadwal kerja tapi tidak presensi.
@@ -23,8 +31,7 @@ const buildRowsWithAbsent = async (rows, startDate, endDate, name) => {
     const presensiSet = new Set();
     rows.forEach(r => {
         if (r.jam_datang) {
-            const tgl = new Date(r.jam_datang);
-            const key = `${r.nama_pegawai}|${tgl.toISOString().slice(0, 10)}`;
+            const key = `${r.nama_pegawai}|${getLocalYYYYMMDD(r.jam_datang)}`;
             presensiSet.add(key);
         }
     });
@@ -32,7 +39,7 @@ const buildRowsWithAbsent = async (rows, startDate, endDate, name) => {
     // Buat baris "Tidak Hadir" untuk jadwal yang tidak ada record presensinya
     const tidakHadirRows = [];
     jadwalList.forEach(({ nama_pegawai, tanggal, shift_kode }) => {
-        const tglStr = tanggal.toISOString().slice(0, 10); // "YYYY-MM-DD"
+        const tglStr = getLocalYYYYMMDD(tanggal);
         const key    = `${nama_pegawai}|${tglStr}`;
 
         if (!presensiSet.has(key)) {
