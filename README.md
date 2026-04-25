@@ -45,6 +45,8 @@ AUTH_USERNAME=admin_username_anda
 AUTH_PASSWORD_HASH=hash_bcrypt_dari_password_anda
 ```
 
+*(Catatan: Anda dapat menggunakan script `generate-hash.js` yang tersedia di direktori proyek untuk membuat hash bcrypt dari password).*
+
 ## 💻 Instalasi dan Menjalankan Server
 
 1. **Clone repositori** (jika belum):
