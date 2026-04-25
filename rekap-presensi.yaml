@@ -1,0 +1,102 @@
+type: collection.insomnia.rest/5.0
+schema_version: "5.1"
+name: Rekap-Presensi
+meta:
+  id: wrk_4ce53581be5f4574b7d75567b8633dd4
+  created: 1777089750044
+  modified: 1777102079421
+  description: ""
+collection:
+  - url: "{{ _['{% request \\'url\\', \\'\\', 0 %}'] }}/api/auth/login"
+    name: auth/login
+    meta:
+      id: req_1f06252b6fd74e698a220737e593fd5e
+      created: 1777089750070
+      modified: 1777091954620
+      isPrivate: false
+      description: ""
+      sortKey: -1777091911707
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+        	"username": "pt",
+        	"password": "ownerpt"
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+      - name: User-Agent
+        value: insomnia/12.5.0
+        description: ""
+        disabled: false
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: "{{ _['{% request \\'url\\', \\'\\', 0 %}'] }}/api/presensi/status"
+    name: presensi/status
+    meta:
+      id: req_77ec9d68c9a749a29af831c161beef0a
+      created: 1777091504550
+      modified: 1777091840338
+      isPrivate: false
+      description: ""
+      sortKey: -1777091504550
+    method: GET
+    headers:
+      - name: User-Agent
+        value: insomnia/12.5.0
+        description: ""
+        disabled: false
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: "{{ _['{% request \\'url\\', \\'\\', 0 %}'] }}/api/presensi/today"
+    name: presensi/today
+    meta:
+      id: req_d4c22776ba7b4729bf11fe71fec58170
+      created: 1777091911607
+      modified: 1777091951515
+      isPrivate: false
+      description: ""
+      sortKey: -1777091911607
+    method: GET
+    headers:
+      - name: User-Agent
+        value: insomnia/12.5.0
+        description: ""
+        disabled: false
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_40a8dc2547b4708539d265c8f72ab433dfd01a6d
+    created: 1777089750059
+    modified: 1777089750059
+environments:
+  name: Base Environment
+  meta:
+    id: env_40a8dc2547b4708539d265c8f72ab433dfd01a6d
+    created: 1777089750055
+    modified: 1777091758904
+    isPrivate: false
+  data:
+    "{% request 'url', '', 0 %}": http://localhost:5000
