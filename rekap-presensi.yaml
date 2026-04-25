@@ -7,84 +7,263 @@ meta:
   modified: 1777102079421
   description: ""
 collection:
-  - url: "{{ _['{% request \\'url\\', \\'\\', 0 %}'] }}/api/auth/login"
-    name: auth/login
+  - name: presensi
     meta:
-      id: req_1f06252b6fd74e698a220737e593fd5e
-      created: 1777089750070
-      modified: 1777091954620
-      isPrivate: false
+      id: fld_b9b156983d584da0bb30a8c3d4be80cb
+      created: 1777102715608
+      modified: 1777103103144
+      sortKey: -1777102742148
       description: ""
-      sortKey: -1777091911707
-    method: POST
-    body:
-      mimeType: application/json
-      text: |-
-        {
-        	"username": "pt",
-        	"password": "ownerpt"
-        }
-    headers:
-      - name: Content-Type
-        value: application/json
-      - name: User-Agent
-        value: insomnia/12.5.0
-        description: ""
-        disabled: false
-    settings:
-      renderRequestBody: true
-      encodeUrl: true
-      followRedirects: global
-      cookies:
-        send: true
-        store: true
-      rebuildPath: true
-  - url: "{{ _['{% request \\'url\\', \\'\\', 0 %}'] }}/api/presensi/status"
-    name: presensi/status
-    meta:
-      id: req_77ec9d68c9a749a29af831c161beef0a
-      created: 1777091504550
-      modified: 1777091840338
-      isPrivate: false
-      description: ""
-      sortKey: -1777091504550
-    method: GET
-    headers:
-      - name: User-Agent
-        value: insomnia/12.5.0
-        description: ""
-        disabled: false
-    settings:
-      renderRequestBody: true
-      encodeUrl: true
-      followRedirects: global
-      cookies:
-        send: true
-        store: true
-      rebuildPath: true
-  - url: "{{ _['{% request \\'url\\', \\'\\', 0 %}'] }}/api/presensi/today"
-    name: presensi/today
-    meta:
-      id: req_d4c22776ba7b4729bf11fe71fec58170
-      created: 1777091911607
-      modified: 1777091951515
-      isPrivate: false
-      description: ""
-      sortKey: -1777091911607
-    method: GET
-    headers:
-      - name: User-Agent
-        value: insomnia/12.5.0
-        description: ""
-        disabled: false
-    settings:
-      renderRequestBody: true
-      encodeUrl: true
-      followRedirects: global
-      cookies:
-        send: true
-        store: true
-      rebuildPath: true
+    children:
+      - name: auth
+        meta:
+          id: fld_4cc70e51bcbf43e99722a98346d6a364
+          created: 1777102741648
+          modified: 1777103107359
+          sortKey: -1777102717887
+          description: ""
+        children:
+          - url: "{{ _['{% request \\'url\\', \\'\\', 0 %}'] }}/api/auth/login"
+            name: auth/login
+            meta:
+              id: req_1f06252b6fd74e698a220737e593fd5e
+              created: 1777089750070
+              modified: 1777102780949
+              isPrivate: false
+              description: ""
+              sortKey: -1777102780917
+            method: POST
+            body:
+              mimeType: application/json
+              text: |-
+                {
+                	"username": "pt",
+                	"password": "ownerpt"
+                }
+            headers:
+              - name: Content-Type
+                value: application/json
+              - name: User-Agent
+                value: insomnia/12.5.0
+                description: ""
+                disabled: false
+            settings:
+              renderRequestBody: true
+              encodeUrl: true
+              followRedirects: global
+              cookies:
+                send: true
+                store: true
+              rebuildPath: true
+      - name: jadwal
+        meta:
+          id: fld_7afe6b4574d74459a9437f05ed8871e2
+          created: 1777102949224
+          modified: 1777103162625
+          sortKey: -1777102717587
+          description: ""
+        children:
+          - url: "{{ _['{% request \\'url\\', \\'\\', 0 %}'] }}/api/jadwal"
+            name: jadwal
+            meta:
+              id: req_24c9924176ae4f69a969374f4360cb5a
+              created: 1777102958603
+              modified: 1777103203173
+              isPrivate: false
+              description: ""
+              sortKey: -1777102961998
+            method: GET
+            parameters:
+              - name: bulan
+                value: "4"
+                description: ""
+                disabled: false
+              - name: tahun
+                value: "2026"
+                description: ""
+                disabled: false
+            headers:
+              - name: User-Agent
+                value: insomnia/12.5.0
+                description: ""
+                disabled: false
+            settings:
+              renderRequestBody: true
+              encodeUrl: true
+              followRedirects: global
+              cookies:
+                send: true
+                store: true
+              rebuildPath: true
+          - url: "{{ _['{% request \\'url\\', \\'\\', 0 %}'] }}/api/jadwal/download"
+            name: jadwal/download
+            meta:
+              id: req_02a72716060a411b8e54d01b64f6fe35
+              created: 1777103163391
+              modified: 1777103567222
+              isPrivate: false
+              description: ""
+              sortKey: -1777102961898
+            method: GET
+            parameters:
+              - name: bulan
+                value: "4"
+                description: 1-12
+                disabled: false
+              - name: tahun
+                value: "2026"
+                description: ""
+                disabled: false
+            headers:
+              - name: User-Agent
+                value: insomnia/12.5.0
+                description: ""
+                disabled: false
+            settings:
+              renderRequestBody: true
+              encodeUrl: true
+              followRedirects: global
+              cookies:
+                send: true
+                store: true
+              rebuildPath: true
+      - name: presensi
+        meta:
+          id: fld_f539c59cd6da4f3faf769d71ec07eb68
+          created: 1777103121158
+          modified: 1777103155141
+          sortKey: -1777102718187
+          description: ""
+        children:
+          - url: "{{ _['{% request \\'url\\', \\'\\', 0 %}'] }}/api/presensi/status"
+            name: presensi/status
+            meta:
+              id: req_77ec9d68c9a749a29af831c161beef0a
+              created: 1777091504550
+              modified: 1777103148538
+              isPrivate: false
+              description: ""
+              sortKey: -1777103148501
+            method: GET
+            headers:
+              - name: User-Agent
+                value: insomnia/12.5.0
+                description: ""
+                disabled: false
+            settings:
+              renderRequestBody: true
+              encodeUrl: true
+              followRedirects: global
+              cookies:
+                send: true
+                store: true
+              rebuildPath: true
+          - url: "{{ _['{% request \\'url\\', \\'\\', 0 %}'] }}/api/presensi/today"
+            name: presensi/today
+            meta:
+              id: req_d4c22776ba7b4729bf11fe71fec58170
+              created: 1777091911607
+              modified: 1777103150987
+              isPrivate: false
+              description: ""
+              sortKey: -1777103148601
+            method: GET
+            headers:
+              - name: User-Agent
+                value: insomnia/12.5.0
+                description: ""
+                disabled: false
+            settings:
+              renderRequestBody: true
+              encodeUrl: true
+              followRedirects: global
+              cookies:
+                send: true
+                store: true
+              rebuildPath: true
+          - url: "{{ _['{% request \\'url\\', \\'\\', 0 %}'] }}/api/presensi"
+            name: presensi
+            meta:
+              id: req_5d2c9d3647cd40d6920e27b6b43cac1c
+              created: 1777103597775
+              modified: 1777103642052
+              isPrivate: false
+              description: ""
+              sortKey: -1777103597775
+            method: GET
+            parameters:
+              - name: startDate
+                value: 2026-04-01
+                description: ""
+                disabled: false
+              - name: endDate
+                value: 2026-04-05
+                description: ""
+                disabled: false
+              - name: name
+                value: debby
+                description: ""
+                disabled: false
+            headers:
+              - name: User-Agent
+                value: insomnia/12.5.0
+                description: ""
+                disabled: false
+            settings:
+              renderRequestBody: true
+              encodeUrl: true
+              followRedirects: global
+              cookies:
+                send: true
+                store: true
+              rebuildPath: true
+      - name: laporan
+        meta:
+          id: fld_803b577bb5164b37842a5e3ce4cbd360
+          created: 1777103671856
+          modified: 1777103671856
+          sortKey: -1777103671856
+          description: ""
+        children:
+          - url: "{{ _['{% request \\'url\\', \\'\\', 0 %}'] }}/api/laporan/penilaian"
+            name: laporan/penilaian
+            meta:
+              id: req_365706787aa84d518c2fd061cef78353
+              created: 1777103674910
+              modified: 1777103797363
+              isPrivate: false
+              description: ""
+              sortKey: -1777103674910
+            method: GET
+            parameters:
+              - name: startDate
+                value: 2026-04-01
+                description: ""
+                disabled: false
+              - name: endDate
+                value: 2026-04-05
+                description: ""
+                disabled: false
+              - name: name
+                value: debby
+                description: ""
+                disabled: false
+            headers:
+              - name: User-Agent
+                value: insomnia/12.5.0
+                description: ""
+                disabled: false
+            settings:
+              renderRequestBody: true
+              encodeUrl: true
+              followRedirects: global
+              cookies:
+                send: true
+                store: true
+              rebuildPath: true
+    authentication:
+      type: bearer
+      token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InB0IiwiaWF0IjoxNzc3MTAyNzkxLCJleHAiOjE3NzcxODkxOTF9.9FYXHU74IQW9ebdgBegG1Bqbc6ybFvBpQMriWNl5jSs
 cookieJar:
   name: Default Jar
   meta:
@@ -96,7 +275,7 @@ environments:
   meta:
     id: env_40a8dc2547b4708539d265c8f72ab433dfd01a6d
     created: 1777089750055
-    modified: 1777091758904
+    modified: 1777103014454
     isPrivate: false
   data:
     "{% request 'url', '', 0 %}": http://localhost:5000
