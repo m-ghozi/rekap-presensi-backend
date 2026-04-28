@@ -264,6 +264,7 @@ const generateLaporanPenilaianExcel = async (laporan, riwayat, params = {}) => {
     const statusStyle = (status) => {
         switch (status) {
             case 'Tepat Waktu': return { bg: 'E8F5E9', fg: C.GREEN };
+            case 'Terlambat Toleransi': return { bg: 'E8F5E9', fg: C.GREEN };
             case 'Terlambat I': return { bg: 'FFF3E0', fg: C.ORANGE };
             case 'Terlambat II': return { bg: 'FFEBEE', fg: C.RED };
             default: return { bg: 'FFEBEE', fg: C.RED };

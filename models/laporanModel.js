@@ -5,10 +5,10 @@ const getRekapPenilaianData = async (startDate, endDate, name) => {
         SELECT 
             p.nama AS nama_pegawai,
             -- Hitung total hari hadir (status selain 'Tidak Hadir')
-            SUM(CASE WHEN rp.status IN ('Tepat Waktu', 'Terlambat I', 'Terlambat II') THEN 1 ELSE 0 END) AS total_hadir,
+            SUM(CASE WHEN rp.status IN ('Tepat Waktu', 'Terlambat Toleransi', 'Terlambat I', 'Terlambat II') THEN 1 ELSE 0 END) AS total_hadir,
             
             -- Breakdown status absensi
-            SUM(CASE WHEN rp.status = 'Tepat Waktu' THEN 1 ELSE 0 END) AS tepat_waktu,
+            SUM(CASE WHEN rp.status IN ('Tepat Waktu', 'Terlambat Toleransi') THEN 1 ELSE 0 END) AS tepat_waktu,
             SUM(CASE WHEN rp.status = 'Terlambat I' THEN 1 ELSE 0 END) AS terlambat_1,
             SUM(CASE WHEN rp.status = 'Terlambat II' THEN 1 ELSE 0 END) AS terlambat_2,
             SUM(CASE WHEN rp.status = 'Tidak Hadir' THEN 1 ELSE 0 END) AS tidak_hadir,
@@ -20,7 +20,7 @@ const getRekapPenilaianData = async (startDate, endDate, name) => {
         JOIN pegawai p ON rp.id = p.id
         WHERE 1=1
     `;
-    
+
     const queryParams = [];
 
     if (startDate && endDate) {
@@ -40,7 +40,7 @@ const getRekapPenilaianData = async (startDate, endDate, name) => {
     }
 
     query += ` GROUP BY p.id, p.nama ORDER BY p.nama ASC`;
-    
+
     const [rows] = await db.query(query, queryParams);
     return rows;
 };
