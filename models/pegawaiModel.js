@@ -4,7 +4,7 @@ const searchPegawaiData = async (name) => {
     const query = `
         SELECT id, nama 
         FROM pegawai 
-        WHERE nama LIKE ? 
+        WHERE nama LIKE ? AND stts_aktif = 'AKTIF' 
         ORDER BY nama ASC 
         LIMIT 10
     `;
