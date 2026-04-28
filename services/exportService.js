@@ -181,8 +181,8 @@ const generateLaporanPenilaianExcel = async (laporan, riwayat, params = {}) => {
         { label: 'PERSENTASE KEHADIRAN', value: laporan?.persentase_kehadiran ?? '-', color: C.BLUE_MID },
         { label: 'TOTAL HADIR', value: laporan?.total_hadir ?? 0, color: C.GREEN },
         { label: 'TEPAT WAKTU', value: laporan?.tepat_waktu ?? 0, color: C.GREEN },
-        { label: 'TERLAMBAT 1 (4-10M)', value: laporan?.terlambat_1 ?? 0, color: C.ORANGE },
-        { label: 'TERLAMBAT 2 (>10M)', value: laporan?.terlambat_2 ?? 0, color: C.RED },
+        { label: 'TERLAMBAT I', value: laporan?.terlambat_1 ?? 0, color: C.ORANGE },
+        { label: 'TERLAMBAT II', value: laporan?.terlambat_2 ?? 0, color: C.RED },
         { label: 'TIDAK HADIR / ALPHA', value: laporan?.tidak_hadir ?? 0, color: C.RED },
         { label: 'HARI KERJA EFEKTIF', value: laporan?.hari_kerja_efektif ?? 0, color: C.BLUE_MID },
         { label: 'TOTAL JAM KERJA', value: laporan?.total_jam_kerja?.split('.')[0] ?? '-', color: C.BLUE_MID },
@@ -201,7 +201,7 @@ const generateLaporanPenilaianExcel = async (laporan, riwayat, params = {}) => {
         lCell.value = stat.label;
         lCell.font = font({ size: 8, bold: true, color: { argb: '757575' } });
         lCell.fill = fill(C.GREY_LIGHT);
-        lCell.alignment = left();
+        lCell.alignment = center();
         lCell.border = { left: thin(), right: thin(), top: thin() };
 
         // Spacer row
@@ -211,10 +211,19 @@ const generateLaporanPenilaianExcel = async (laporan, riwayat, params = {}) => {
 
         // Value row
         const vCell = ws1.getCell(`${col}${startRow + 2}`);
-        vCell.value = stat.value;
+        let cellValue = stat.value;
+        if (stat.label === 'PERSENTASE KEHADIRAN' && typeof cellValue === 'string' && cellValue.endsWith('%')) {
+            cellValue = parseFloat(cellValue) / 100;
+            vCell.numFmt = '0%';
+        } else if (typeof cellValue === 'string' && !isNaN(cellValue) && cellValue.trim() !== '' && stat.label !== 'TOTAL JAM KERJA') {
+            cellValue = Number(cellValue);
+        } else if (stat.label === 'TOTAL JAM KERJA' && typeof cellValue === 'string' && !isNaN(cellValue)) {
+            cellValue = Number(cellValue);
+        }
+        vCell.value = cellValue;
         vCell.font = font({ size: 16, bold: true, color: { argb: stat.color } });
         vCell.fill = fill(C.GREY_LIGHT);
-        vCell.alignment = left();
+        vCell.alignment = center();
         vCell.border = { left: thin(), right: thin(), bottom: thin() };
     });
 
@@ -230,8 +239,8 @@ const generateLaporanPenilaianExcel = async (laporan, riwayat, params = {}) => {
         { key: 'E', width: 18 },
         { key: 'F', width: 16 },
         { key: 'G', width: 15 },
-        { key: 'H', width: 12 },
-        { key: 'I', width: 22 },
+        { key: 'H', width: 18 },
+        { key: 'I', width: 12 },
     ];
     COL_DEFS.forEach(({ key, width }) => ws1.getColumn(key).width = width);
 
@@ -284,7 +293,9 @@ const generateLaporanPenilaianExcel = async (laporan, riwayat, params = {}) => {
             row.status,
             row.keterlambatan || '-',
             row.durasi || '-',
-            row.keterangan || '-',
+            (row.keterangan || '-').toLowerCase().includes('mobile') ? 'Mobile' :
+                (row.keterangan || '-').toLowerCase().includes('singkronisasi') ? 'Fingerprint' :
+                    row.keterangan || '-',
         ];
 
         rowValues.forEach((val, ci) => {
@@ -311,93 +322,12 @@ const generateLaporanPenilaianExcel = async (laporan, riwayat, params = {}) => {
 
     ws1.views = [{ state: 'frozen', ySplit: HDR_ROW }];
 
-    // ════════════════════════════════════════════════════════════════════════
-    // SHEET 2: Riwayat Presensi Detail (raw data)
-    // ════════════════════════════════════════════════════════════════════════
-    const ws2 = workbook.addWorksheet('Riwayat Presensi Detail');
-
-    ws2.mergeCells('A1:I1');
-    Object.assign(ws2.getCell('A1'), {
-        value: 'RIWAYAT PRESENSI DETAIL',
-        font: font({ size: 13, bold: true, color: { argb: C.WHITE } }),
-        fill: fill(C.BLUE_DARK),
-        alignment: center(),
-    });
-    ws2.getRow(1).height = 32;
-
-    ws2.mergeCells('A2:I2');
-    Object.assign(ws2.getCell('A2'), {
-        value: `${periodLabel}${nameLabel}`,
-        font: font({ size: 10, color: { argb: '555555' } }),
-        fill: fill('EEF2F7'),
-        alignment: center(),
-    });
-    ws2.getRow(2).height = 20;
-    ws2.getRow(3).height = 8;
-
-    COL_DEFS.forEach(({ key, width }) => ws2.getColumn(key).width = width);
-
-    const HDR2_ROW = 4;
-    ws2.getRow(HDR2_ROW).height = 26;
-    HEADERS.forEach((h, i) => {
-        const c = ws2.getCell(`${HDR_KEYS[i]}${HDR2_ROW}`);
-        c.value = h;
-        c.font = font({ bold: true, color: { argb: C.WHITE } });
-        c.fill = fill(C.BLUE_MID);
-        c.alignment = center();
-        c.border = border();
-    });
-
-    riwayat.forEach((row, idx) => {
-        const r = HDR2_ROW + 1 + idx;
-        const bg = idx % 2 === 0 ? C.BLUE_LIGHT : C.WHITE;
-        ws2.getRow(r).height = 20;
-
-        const { bg: sBg, fg: sFg } = statusStyle(row.status);
-        const rowValues = [
-            idx + 1,
-            row.nama_pegawai,
-            row.shift,
-            fmtDate(row.jam_datang),
-            fmtDate(row.jam_pulang),
-            row.status,
-            row.keterlambatan || '-',
-            row.durasi || '-',
-            row.keterangan || '-',
-        ];
-
-        rowValues.forEach((val, ci) => {
-            const c = ws2.getCell(`${HDR_KEYS[ci]}${r}`);
-            c.value = val;
-            c.alignment = center(true);
-            c.border = border();
-
-            if (ci === 5) {
-                c.font = font({ size: 9, bold: true, color: { argb: sFg } });
-                c.fill = fill(sBg);
-            } else if (ci === 6 && val !== '-') {
-                c.font = font({ size: 9, bold: true, color: { argb: C.RED } });
-                c.fill = fill(bg);
-            } else if (ci === 7 && val !== '-') {
-                c.font = font({ size: 9, bold: true, color: { argb: C.GREEN } });
-                c.fill = fill(bg);
-            } else {
-                c.font = font({ color: { argb: '212121' } });
-                c.fill = fill(bg);
-            }
-        });
-    });
-
-    ws2.views = [{ state: 'frozen', ySplit: HDR2_ROW }];
-
     // Print settings
-    [ws1, ws2].forEach((ws) => {
-        ws.pageSetup.orientation = 'landscape';
-        ws.pageSetup.fitToPage = true;
-        ws.pageSetup.fitToWidth = 1;
-        ws.pageSetup.fitToHeight = 0;
-        ws.pageSetup.printTitlesRow = `1:2`;
-    });
+    ws1.pageSetup.orientation = 'landscape';
+    ws1.pageSetup.fitToPage = true;
+    ws1.pageSetup.fitToWidth = 1;
+    ws1.pageSetup.fitToHeight = 0;
+    ws1.pageSetup.printTitlesRow = `1:2`;
 
     return workbook.xlsx.writeBuffer();
 };
