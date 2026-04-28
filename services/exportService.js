@@ -114,7 +114,296 @@ const generateJadwalExcel = async (data, colsToKeep = []) => {
     return await workbook.xlsx.writeBuffer();
 };
 
+/**
+ * Generate Excel laporan penilaian + riwayat presensi detail
+ * @param {Object} laporan   - data dari /api/laporan/penilaian (satu objek pegawai)
+ * @param {Array}  riwayat   - data dari /api/presensi
+ * @param {Object} params    - { startDate, endDate, name }
+ */
+const generateLaporanPenilaianExcel = async (laporan, riwayat, params = {}) => {
+    const workbook = new ExcelJS.Workbook();
+    workbook.creator = 'Sistem Rekap Presensi';
+    workbook.created = new Date();
+
+    // ── Palette ──────────────────────────────────────────────────────────────
+    const C = {
+        BLUE_DARK: '1565C0',
+        BLUE_MID: '1976D2',
+        BLUE_LIGHT: 'E3F2FD',
+        WHITE: 'FFFFFF',
+        GREEN: '2E7D32',
+        ORANGE: 'E65100',
+        RED: 'C62828',
+        GREY_LIGHT: 'F5F5F5',
+        GREY_BORDER: 'BDBDBD',
+    };
+
+    const fill = (hex) => ({ type: 'pattern', pattern: 'solid', fgColor: { argb: hex } });
+    const thin = (hex = C.GREY_BORDER) => ({ style: 'thin', color: { argb: hex } });
+    const border = () => ({ left: thin(), right: thin(), top: thin(), bottom: thin() });
+    const center = (wrap = false) => ({ horizontal: 'center', vertical: 'middle', wrapText: wrap });
+    const left = (wrap = false) => ({ horizontal: 'left', vertical: 'middle', wrapText: wrap });
+    const font = (opts = {}) => ({ name: 'Arial', size: 10, ...opts });
+
+    const periodLabel = params.startDate && params.endDate
+        ? `Periode: ${params.startDate} s/d ${params.endDate}`
+        : 'Semua Periode';
+    const nameLabel = params.name ? `  |  Nama: ${params.name}` : '';
+
+    // ════════════════════════════════════════════════════════════════════════
+    // SHEET 1: Ringkasan Kehadiran
+    // ════════════════════════════════════════════════════════════════════════
+    const ws1 = workbook.addWorksheet('Ringkasan Kehadiran');
+
+    // Title
+    ws1.mergeCells('A1:I1');
+    Object.assign(ws1.getCell('A1'), {
+        value: 'LAPORAN REKAP KEHADIRAN PEGAWAI',
+        font: font({ size: 14, bold: true, color: { argb: C.WHITE } }),
+        fill: fill(C.BLUE_DARK),
+        alignment: center(),
+    });
+    ws1.getRow(1).height = 36;
+
+    // Subtitle
+    ws1.mergeCells('A2:I2');
+    Object.assign(ws1.getCell('A2'), {
+        value: `${periodLabel}${nameLabel}`,
+        font: font({ size: 10, color: { argb: '555555' } }),
+        fill: fill('EEF2F7'),
+        alignment: center(),
+    });
+    ws1.getRow(2).height = 22;
+    ws1.getRow(3).height = 10;
+
+    // ── Stat cards ───────────────────────────────────────────────────────────
+    const STATS = [
+        { label: 'PERSENTASE KEHADIRAN', value: laporan?.persentase_kehadiran ?? '-', color: C.BLUE_MID },
+        { label: 'TOTAL HADIR', value: laporan?.total_hadir ?? 0, color: C.GREEN },
+        { label: 'TEPAT WAKTU', value: laporan?.tepat_waktu ?? 0, color: C.GREEN },
+        { label: 'TERLAMBAT 1 (4-10M)', value: laporan?.terlambat_1 ?? 0, color: C.ORANGE },
+        { label: 'TERLAMBAT 2 (>10M)', value: laporan?.terlambat_2 ?? 0, color: C.RED },
+        { label: 'TIDAK HADIR / ALPHA', value: laporan?.tidak_hadir ?? 0, color: C.RED },
+        { label: 'HARI KERJA EFEKTIF', value: laporan?.hari_kerja_efektif ?? 0, color: C.BLUE_MID },
+        { label: 'TOTAL JAM KERJA', value: laporan?.total_jam_kerja?.split('.')[0] ?? '-', color: C.BLUE_MID },
+    ];
+
+    // 4 cards per row, columns B D F H, starting at row 4
+    const CARD_COLS = ['B', 'D', 'F', 'H'];
+    const CARD_START = [4, 9];
+
+    STATS.forEach((stat, i) => {
+        const col = CARD_COLS[i % 4];
+        const startRow = CARD_START[Math.floor(i / 4)];
+
+        // Label row
+        const lCell = ws1.getCell(`${col}${startRow}`);
+        lCell.value = stat.label;
+        lCell.font = font({ size: 8, bold: true, color: { argb: '757575' } });
+        lCell.fill = fill(C.GREY_LIGHT);
+        lCell.alignment = left();
+        lCell.border = { left: thin(), right: thin(), top: thin() };
+
+        // Spacer row
+        const sCell = ws1.getCell(`${col}${startRow + 1}`);
+        sCell.fill = fill(C.GREY_LIGHT);
+        sCell.border = { left: thin(), right: thin() };
+
+        // Value row
+        const vCell = ws1.getCell(`${col}${startRow + 2}`);
+        vCell.value = stat.value;
+        vCell.font = font({ size: 16, bold: true, color: { argb: stat.color } });
+        vCell.fill = fill(C.GREY_LIGHT);
+        vCell.alignment = left();
+        vCell.border = { left: thin(), right: thin(), bottom: thin() };
+    });
+
+    for (let r = 4; r <= 14; r++) ws1.getRow(r).height = 16;
+    ws1.getRow(14).height = 14;
+
+    // ── Column widths ─────────────────────────────────────────────────────────
+    const COL_DEFS = [
+        { key: 'A', width: 5 },
+        { key: 'B', width: 28 },
+        { key: 'C', width: 22 },
+        { key: 'D', width: 18 },
+        { key: 'E', width: 18 },
+        { key: 'F', width: 16 },
+        { key: 'G', width: 15 },
+        { key: 'H', width: 12 },
+        { key: 'I', width: 22 },
+    ];
+    COL_DEFS.forEach(({ key, width }) => ws1.getColumn(key).width = width);
+
+    // ── Detail table ──────────────────────────────────────────────────────────
+    const HDR_ROW = 15;
+    const HEADERS = ['No', 'Nama Pegawai', 'Shift', 'Jam Datang', 'Jam Pulang',
+        'Status', 'Keterlambatan', 'Durasi', 'Keterangan'];
+    const HDR_KEYS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'];
+
+    ws1.getRow(HDR_ROW).height = 28;
+    HEADERS.forEach((h, i) => {
+        const c = ws1.getCell(`${HDR_KEYS[i]}${HDR_ROW}`);
+        c.value = h;
+        c.font = font({ bold: true, color: { argb: C.WHITE } });
+        c.fill = fill(C.BLUE_MID);
+        c.alignment = center();
+        c.border = border();
+    });
+
+    // Status color helper
+    const statusStyle = (status) => {
+        switch (status) {
+            case 'Tepat Waktu': return { bg: 'E8F5E9', fg: C.GREEN };
+            case 'Terlambat I': return { bg: 'FFF3E0', fg: C.ORANGE };
+            case 'Terlambat II': return { bg: 'FFEBEE', fg: C.RED };
+            default: return { bg: 'FFEBEE', fg: C.RED };
+        }
+    };
+
+    const fmtDate = (d) => {
+        if (!d) return '-';
+        const dt = new Date(d);
+        const pad = (n) => String(n).padStart(2, '0');
+        return `${pad(dt.getDate())}/${pad(dt.getMonth() + 1)}/${dt.getFullYear()} `
+            + `${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
+    };
+
+    riwayat.forEach((row, idx) => {
+        const r = HDR_ROW + 1 + idx;
+        const bg = idx % 2 === 0 ? C.BLUE_LIGHT : C.WHITE;
+        ws1.getRow(r).height = 22;
+
+        const { bg: sBg, fg: sFg } = statusStyle(row.status);
+        const rowValues = [
+            idx + 1,
+            row.nama_pegawai,
+            row.shift,
+            fmtDate(row.jam_datang),
+            fmtDate(row.jam_pulang),
+            row.status,
+            row.keterlambatan || '-',
+            row.durasi || '-',
+            row.keterangan || '-',
+        ];
+
+        rowValues.forEach((val, ci) => {
+            const c = ws1.getCell(`${HDR_KEYS[ci]}${r}`);
+            c.value = val;
+            c.alignment = center(true);
+            c.border = border();
+
+            if (ci === 5) { // Status
+                c.font = font({ size: 9, bold: true, color: { argb: sFg } });
+                c.fill = fill(sBg);
+            } else if (ci === 6 && val !== '-') { // Keterlambatan
+                c.font = font({ size: 9, bold: true, color: { argb: C.RED } });
+                c.fill = fill(bg);
+            } else if (ci === 7 && val !== '-') { // Durasi
+                c.font = font({ size: 9, bold: true, color: { argb: C.GREEN } });
+                c.fill = fill(bg);
+            } else {
+                c.font = font({ color: { argb: '212121' } });
+                c.fill = fill(bg);
+            }
+        });
+    });
+
+    ws1.views = [{ state: 'frozen', ySplit: HDR_ROW }];
+
+    // ════════════════════════════════════════════════════════════════════════
+    // SHEET 2: Riwayat Presensi Detail (raw data)
+    // ════════════════════════════════════════════════════════════════════════
+    const ws2 = workbook.addWorksheet('Riwayat Presensi Detail');
+
+    ws2.mergeCells('A1:I1');
+    Object.assign(ws2.getCell('A1'), {
+        value: 'RIWAYAT PRESENSI DETAIL',
+        font: font({ size: 13, bold: true, color: { argb: C.WHITE } }),
+        fill: fill(C.BLUE_DARK),
+        alignment: center(),
+    });
+    ws2.getRow(1).height = 32;
+
+    ws2.mergeCells('A2:I2');
+    Object.assign(ws2.getCell('A2'), {
+        value: `${periodLabel}${nameLabel}`,
+        font: font({ size: 10, color: { argb: '555555' } }),
+        fill: fill('EEF2F7'),
+        alignment: center(),
+    });
+    ws2.getRow(2).height = 20;
+    ws2.getRow(3).height = 8;
+
+    COL_DEFS.forEach(({ key, width }) => ws2.getColumn(key).width = width);
+
+    const HDR2_ROW = 4;
+    ws2.getRow(HDR2_ROW).height = 26;
+    HEADERS.forEach((h, i) => {
+        const c = ws2.getCell(`${HDR_KEYS[i]}${HDR2_ROW}`);
+        c.value = h;
+        c.font = font({ bold: true, color: { argb: C.WHITE } });
+        c.fill = fill(C.BLUE_MID);
+        c.alignment = center();
+        c.border = border();
+    });
+
+    riwayat.forEach((row, idx) => {
+        const r = HDR2_ROW + 1 + idx;
+        const bg = idx % 2 === 0 ? C.BLUE_LIGHT : C.WHITE;
+        ws2.getRow(r).height = 20;
+
+        const { bg: sBg, fg: sFg } = statusStyle(row.status);
+        const rowValues = [
+            idx + 1,
+            row.nama_pegawai,
+            row.shift,
+            fmtDate(row.jam_datang),
+            fmtDate(row.jam_pulang),
+            row.status,
+            row.keterlambatan || '-',
+            row.durasi || '-',
+            row.keterangan || '-',
+        ];
+
+        rowValues.forEach((val, ci) => {
+            const c = ws2.getCell(`${HDR_KEYS[ci]}${r}`);
+            c.value = val;
+            c.alignment = center(true);
+            c.border = border();
+
+            if (ci === 5) {
+                c.font = font({ size: 9, bold: true, color: { argb: sFg } });
+                c.fill = fill(sBg);
+            } else if (ci === 6 && val !== '-') {
+                c.font = font({ size: 9, bold: true, color: { argb: C.RED } });
+                c.fill = fill(bg);
+            } else if (ci === 7 && val !== '-') {
+                c.font = font({ size: 9, bold: true, color: { argb: C.GREEN } });
+                c.fill = fill(bg);
+            } else {
+                c.font = font({ color: { argb: '212121' } });
+                c.fill = fill(bg);
+            }
+        });
+    });
+
+    ws2.views = [{ state: 'frozen', ySplit: HDR2_ROW }];
+
+    // Print settings
+    [ws1, ws2].forEach((ws) => {
+        ws.pageSetup.orientation = 'landscape';
+        ws.pageSetup.fitToPage = true;
+        ws.pageSetup.fitToWidth = 1;
+        ws.pageSetup.fitToHeight = 0;
+        ws.pageSetup.printTitlesRow = `1:2`;
+    });
+
+    return workbook.xlsx.writeBuffer();
+};
+
 module.exports = {
     generateExcel,
-    generateJadwalExcel
+    generateJadwalExcel,
+    generateLaporanPenilaianExcel
 };

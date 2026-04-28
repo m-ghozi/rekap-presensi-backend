@@ -122,6 +122,7 @@ const getTodayPresensi = async (req, res) => {
 };
 
 module.exports = {
+    buildRowsWithAbsent,
     getRekapPresensi,
     getTableStatus,
     downloadExcel,
