@@ -11,7 +11,7 @@ collection:
     meta:
       id: fld_b9b156983d584da0bb30a8c3d4be80cb
       created: 1777102715608
-      modified: 1777105836617
+      modified: 1777348391625
       sortKey: -1777102742148
       description: ""
     children:
@@ -230,7 +230,7 @@ collection:
             meta:
               id: req_365706787aa84d518c2fd061cef78353
               created: 1777103674910
-              modified: 1777103797363
+              modified: 1777348502739
               isPrivate: false
               description: ""
               sortKey: -1777103674910
@@ -245,7 +245,43 @@ collection:
                 description: ""
                 disabled: false
               - name: name
-                value: debby
+                value: windi
+                description: ""
+                disabled: false
+            headers:
+              - name: User-Agent
+                value: insomnia/12.5.0
+                description: ""
+                disabled: false
+            settings:
+              renderRequestBody: true
+              encodeUrl: true
+              followRedirects: global
+              cookies:
+                send: true
+                store: true
+              rebuildPath: true
+          - url: "{{ _['{% request \\'url\\', \\'\\', 0 %}'] }}/api/laporan/download"
+            name: laporan/download
+            meta:
+              id: req_87a0e877f6984ebfb606d9a2ac4a4f62
+              created: 1777358613277
+              modified: 1777358661860
+              isPrivate: false
+              description: ""
+              sortKey: -1777358613277
+            method: GET
+            parameters:
+              - name: name
+                value: windi
+                description: ""
+                disabled: false
+              - name: startDate
+                value: 2026-04-01
+                description: ""
+                disabled: false
+              - name: endDate
+                value: 2026-04-05
                 description: ""
                 disabled: false
             headers:
@@ -263,7 +299,7 @@ collection:
               rebuildPath: true
     authentication:
       type: bearer
-      token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InB0IiwiaWF0IjoxNzc3MTAyNzkxLCJleHAiOjE3NzcxODkxOTF9.9FYXHU74IQW9ebdgBegG1Bqbc6ybFvBpQMriWNl5jSs
+      token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InB0IiwiaWF0IjoxNzc3MzQ4MzcyLCJleHAiOjE3Nzc0MzQ3NzJ9.k2TyoOUAm52PeMyzWgBPTahSuQOlZu-3FJ5JDHR3u9U
 cookieJar:
   name: Default Jar
   meta:
