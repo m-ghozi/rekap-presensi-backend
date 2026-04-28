@@ -297,6 +297,42 @@ collection:
                 send: true
                 store: true
               rebuildPath: true
+      - name: pegawai
+        meta:
+          id: fld_08185eb21d654888b181f1632ab73e94
+          created: 1777363509048
+          modified: 1777363509048
+          sortKey: -1777363509048
+          description: ""
+        children:
+          - url: "{{ _['{% request \\'url\\', \\'\\', 0 %}'] }}/api/pegawai/autocomplete"
+            name: pegawai/autocomplete
+            meta:
+              id: req_bba8c593965e4b408d7c4c0c0d2b699c
+              created: 1777363512112
+              modified: 1777363791250
+              isPrivate: false
+              description: ""
+              sortKey: -1777363512112
+            method: GET
+            parameters:
+              - name: q
+                value: a
+                description: ""
+                disabled: false
+            headers:
+              - name: User-Agent
+                value: insomnia/12.5.0
+                description: ""
+                disabled: false
+            settings:
+              renderRequestBody: true
+              encodeUrl: true
+              followRedirects: global
+              cookies:
+                send: true
+                store: true
+              rebuildPath: true
     authentication:
       type: bearer
       token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InB0IiwiaWF0IjoxNzc3MzQ4MzcyLCJleHAiOjE3Nzc0MzQ3NzJ9.k2TyoOUAm52PeMyzWgBPTahSuQOlZu-3FJ5JDHR3u9U
