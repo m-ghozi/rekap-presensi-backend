@@ -190,7 +190,7 @@ const generateLaporanPenilaianExcel = async (laporan, riwayat, params = {}) => {
 
     // 4 cards per row, columns B D F H, starting at row 4
     const CARD_COLS = ['B', 'D', 'F', 'H'];
-    const CARD_START = [4, 9];
+    const CARD_START = [4, 8];
 
     STATS.forEach((stat, i) => {
         const col = CARD_COLS[i % 4];
@@ -245,7 +245,7 @@ const generateLaporanPenilaianExcel = async (laporan, riwayat, params = {}) => {
     COL_DEFS.forEach(({ key, width }) => ws1.getColumn(key).width = width);
 
     // ── Detail table ──────────────────────────────────────────────────────────
-    const HDR_ROW = 15;
+    const HDR_ROW = 12;
     const HEADERS = ['No', 'Nama Pegawai', 'Shift', 'Jam Datang', 'Jam Pulang',
         'Status', 'Keterlambatan', 'Durasi', 'Keterangan'];
     const HDR_KEYS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'];
