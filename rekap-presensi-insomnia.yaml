@@ -4,14 +4,14 @@ name: Rekap-Presensi
 meta:
   id: wrk_4ce53581be5f4574b7d75567b8633dd4
   created: 1777089750044
-  modified: 1777102079421
+  modified: 1777106929704
   description: ""
 collection:
   - name: presensi
     meta:
       id: fld_b9b156983d584da0bb30a8c3d4be80cb
       created: 1777102715608
-      modified: 1777103103144
+      modified: 1777105836617
       sortKey: -1777102742148
       description: ""
     children:
@@ -19,8 +19,8 @@ collection:
         meta:
           id: fld_4cc70e51bcbf43e99722a98346d6a364
           created: 1777102741648
-          modified: 1777103107359
-          sortKey: -1777102717887
+          modified: 1777105761418
+          sortKey: -1777103671956
           description: ""
         children:
           - url: "{{ _['{% request \\'url\\', \\'\\', 0 %}'] }}/api/auth/login"
@@ -28,7 +28,7 @@ collection:
             meta:
               id: req_1f06252b6fd74e698a220737e593fd5e
               created: 1777089750070
-              modified: 1777102780949
+              modified: 1777105912290
               isPrivate: false
               description: ""
               sortKey: -1777102780917
@@ -100,7 +100,7 @@ collection:
             meta:
               id: req_02a72716060a411b8e54d01b64f6fe35
               created: 1777103163391
-              modified: 1777103567222
+              modified: 1777105119922
               isPrivate: false
               description: ""
               sortKey: -1777102961898
@@ -108,7 +108,7 @@ collection:
             parameters:
               - name: bulan
                 value: "4"
-                description: 1-12
+                description: ""
                 disabled: false
               - name: tahun
                 value: "2026"
@@ -275,7 +275,7 @@ environments:
   meta:
     id: env_40a8dc2547b4708539d265c8f72ab433dfd01a6d
     created: 1777089750055
-    modified: 1777103014454
+    modified: 1777106619798
     isPrivate: false
   data:
     "{% request 'url', '', 0 %}": http://localhost:5000
