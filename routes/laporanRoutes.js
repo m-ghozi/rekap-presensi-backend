@@ -5,6 +5,6 @@ const laporanController = require('../controllers/laporanController');
 // Endpoint: GET /api/laporan/penilaian
 router.get('/penilaian', laporanController.getRekapPenilaian);
 
-// router.get('/export-excel', laporanController.exportPenilaianExcel);
+router.get('/download', laporanController.downloadLaporanExcel);
 
 module.exports = router;
