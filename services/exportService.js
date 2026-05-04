@@ -1,5 +1,10 @@
 const ExcelJS = require('exceljs');
 
+const BULAN_NAMA = [
+    '', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+];
+
 const generateExcel = async (data) => {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Rekap Presensi');
@@ -333,8 +338,176 @@ const generateLaporanPenilaianExcel = async (laporan, riwayat, params = {}) => {
     return workbook.xlsx.writeBuffer();
 };
 
+/**
+ * Generate Excel rekap bulanan semua pegawai.
+ * @param {Array}  data   - hasil dari laporanController.downloadRekapBulananExcel
+ * @param {number} bulan  - 1–12
+ * @param {number} tahun  - e.g. 2026
+ */
+const generateRekapBulananExcel = async (data, bulan, tahun) => {
+    const ExcelJS = require('exceljs');
+    const workbook = new ExcelJS.Workbook();
+    workbook.creator = 'Sistem Rekap Presensi';
+    workbook.created = new Date();
+
+    const ws = workbook.addWorksheet('Rekap Bulanan');
+
+    // ── Palette ──────────────────────────────────────────────────────────────
+    const C = {
+        BLUE_DARK: '1565C0',
+        BLUE_MID: '1976D2',
+        BLUE_LIGHT: 'E3F2FD',
+        WHITE: 'FFFFFF',
+        GREEN: '2E7D32',
+        ORANGE: 'E65100',
+        RED: 'C62828',
+        GREY_LIGHT: 'F5F5F5',
+        GREY_BORDER: 'BDBDBD',
+    };
+
+    const fill = hex => ({ type: 'pattern', pattern: 'solid', fgColor: { argb: hex } });
+    const thin = (hex = C.GREY_BORDER) => ({ style: 'thin', color: { argb: hex } });
+    const border = () => ({ left: thin(), right: thin(), top: thin(), bottom: thin() });
+    const center = (wrap = false) => ({ horizontal: 'center', vertical: 'middle', wrapText: wrap });
+    const font = (opts = {}) => ({ name: 'Arial', size: 10, ...opts });
+
+    // ── Title ─────────────────────────────────────────────────────────────────
+    ws.mergeCells('A1:J1');
+    Object.assign(ws.getCell('A1'), {
+        value: 'REKAP KEHADIRAN BULANAN PEGAWAI',
+        font: font({ size: 14, bold: true, color: { argb: C.WHITE } }),
+        fill: fill(C.BLUE_DARK),
+        alignment: center(),
+    });
+    ws.getRow(1).height = 36;
+
+    ws.mergeCells('A2:J2');
+    Object.assign(ws.getCell('A2'), {
+        value: `Periode: ${BULAN_NAMA[bulan]} ${tahun}`,
+        font: font({ size: 10, color: { argb: '555555' } }),
+        fill: fill('EEF2F7'),
+        alignment: center(),
+    });
+    ws.getRow(2).height = 22;
+
+    // ── Column definitions ────────────────────────────────────────────────────
+    ws.columns = [
+        { key: 'no', width: 5 },
+        { key: 'nama_pegawai', width: 35 },
+        { key: 'jumlah_hadir', width: 14 },
+        { key: 'tepat_waktu', width: 13 },
+        { key: 'terlambat', width: 12 },
+        { key: 'total_keterlambatan', width: 20 },
+        { key: 'tidak_hadir', width: 13 },
+        { key: 'total_jam_kerja', width: 16 },
+        { key: 'hari_kerja_efektif', width: 18 },
+        { key: 'persentase_kehadiran', width: 20 },
+    ];
+
+    // ── Header row ────────────────────────────────────────────────────────────
+    const HDR_LABELS = [
+        'No', 'Nama Pegawai', 'Jumlah Hadir', 'Tepat Waktu',
+        'Terlambat', 'Total Keterlambatan', 'Tidak Hadir',
+        'Total Jam Kerja', 'Hari Kerja Efektif', 'Persentase Kehadiran',
+    ];
+    const HDR_COLS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
+    const HDR_ROW = 4;
+
+    ws.getRow(HDR_ROW).height = 30;
+    HDR_LABELS.forEach((label, i) => {
+        const c = ws.getCell(`${HDR_COLS[i]}${HDR_ROW}`);
+        c.value = label;
+        c.font = font({ bold: true, color: { argb: C.WHITE } });
+        c.fill = fill(C.BLUE_MID);
+        c.alignment = center(true);
+        c.border = border();
+    });
+
+    // ── Data rows ─────────────────────────────────────────────────────────────
+    data.forEach((item, idx) => {
+        const r = HDR_ROW + 1 + idx;
+        const bg = idx % 2 === 0 ? C.BLUE_LIGHT : C.WHITE;
+        const row = ws.getRow(r);
+        row.height = 22;
+
+        // Parse persentase untuk pewarnaan
+        const pct = parseInt(String(item.persentase_kehadiran).replace('%', '')) || 0;
+        const pctColor = pct >= 90 ? C.GREEN : pct >= 75 ? C.ORANGE : C.RED;
+
+        const values = [
+            item.no,
+            item.nama_pegawai,
+            item.jumlah_hadir,           // sudah format "N hari" dari controller
+            item.tepat_waktu,
+            item.terlambat,
+            item.total_keterlambatan,
+            item.tidak_hadir,
+            item.total_jam_kerja,
+            item.hari_kerja_efektif,
+            item.persentase_kehadiran,
+        ];
+
+        values.forEach((val, ci) => {
+            const c = ws.getCell(`${HDR_COLS[ci]}${r}`);
+            c.value = val;
+            c.border = border();
+            c.alignment = center(ci === 1); // wrap hanya nama
+
+            if (ci === 9) {
+                // Persentase — warna sesuai nilai
+                c.font = font({ bold: true, color: { argb: pctColor } });
+                c.fill = fill(bg);
+            } else if (ci === 5 && val !== '00:00:00') {
+                // Total keterlambatan — merah jika ada
+                c.font = font({ bold: true, color: { argb: C.RED } });
+                c.fill = fill(bg);
+            } else if (ci === 6 && item.tidak_hadir > 0) {
+                // Tidak hadir — merah jika ada
+                c.font = font({ bold: true, color: { argb: C.RED } });
+                c.fill = fill(bg);
+            } else {
+                c.font = font({ color: { argb: '212121' } });
+                c.fill = fill(bg);
+            }
+        });
+    });
+
+    // ── Summary row ───────────────────────────────────────────────────────────
+    if (data.length > 0) {
+        const LAST = HDR_ROW + data.length;
+        const SUM_ROW = LAST + 2;
+        ws.getRow(SUM_ROW).height = 22;
+
+        ws.mergeCells(`A${SUM_ROW}:B${SUM_ROW}`);
+        const sumLabel = ws.getCell(`A${SUM_ROW}`);
+        sumLabel.value = 'Total Pegawai';
+        sumLabel.font = font({ bold: true, color: { argb: C.WHITE } });
+        sumLabel.fill = fill(C.BLUE_DARK);
+        sumLabel.alignment = center();
+        sumLabel.border = border();
+
+        const totalCell = ws.getCell(`C${SUM_ROW}`);
+        totalCell.value = `${data.length} pegawai`;
+        totalCell.font = font({ bold: true, color: { argb: C.WHITE } });
+        totalCell.fill = fill(C.BLUE_DARK);
+        totalCell.alignment = center();
+        totalCell.border = border();
+    }
+
+    // ── Freeze & print ────────────────────────────────────────────────────────
+    ws.views = [{ state: 'frozen', ySplit: HDR_ROW }];
+    ws.pageSetup.orientation = 'landscape';
+    ws.pageSetup.fitToPage = true;
+    ws.pageSetup.fitToWidth = 1;
+    ws.pageSetup.fitToHeight = 0;
+    ws.pageSetup.printTitlesRow = `1:4`;
+
+    return workbook.xlsx.writeBuffer();
+};
+
 module.exports = {
     generateExcel,
     generateJadwalExcel,
-    generateLaporanPenilaianExcel
+    generateLaporanPenilaianExcel,
+    generateRekapBulananExcel
 };
