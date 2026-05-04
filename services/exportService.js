@@ -369,6 +369,7 @@ const generateRekapBulananExcel = async (data, bulan, tahun) => {
     const thin = (hex = C.GREY_BORDER) => ({ style: 'thin', color: { argb: hex } });
     const border = () => ({ left: thin(), right: thin(), top: thin(), bottom: thin() });
     const center = (wrap = false) => ({ horizontal: 'center', vertical: 'middle', wrapText: wrap });
+    const left = (wrap = false) => ({ horizontal: 'left', vertical: 'middle', wrapText: wrap });
     const font = (opts = {}) => ({ name: 'Arial', size: 10, ...opts });
 
     // ── Title ─────────────────────────────────────────────────────────────────
@@ -394,7 +395,7 @@ const generateRekapBulananExcel = async (data, bulan, tahun) => {
     ws.columns = [
         { key: 'no', width: 5 },
         { key: 'nama_pegawai', width: 35 },
-        { key: 'jumlah_hadir', width: 10 },
+        { key: 'jumlah_hadir', width: 14 },
         { key: 'tepat_waktu', width: 10 },
         { key: 'terlambat', width: 12 },
         { key: 'total_keterlambatan', width: 15 },
@@ -451,7 +452,7 @@ const generateRekapBulananExcel = async (data, bulan, tahun) => {
             const c = ws.getCell(`${HDR_COLS[ci]}${r}`);
             c.value = val;
             c.border = border();
-            c.alignment = center(ci === 1); // wrap hanya nama
+            c.alignment = ci === 1 ? left(true) : center(false); // rata kiri dan wrap untuk nama
 
             if (ci === 9) {
                 // Persentase — warna sesuai nilai
