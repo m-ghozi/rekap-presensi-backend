@@ -394,14 +394,14 @@ const generateRekapBulananExcel = async (data, bulan, tahun) => {
     ws.columns = [
         { key: 'no', width: 5 },
         { key: 'nama_pegawai', width: 35 },
-        { key: 'jumlah_hadir', width: 14 },
-        { key: 'tepat_waktu', width: 13 },
+        { key: 'jumlah_hadir', width: 10 },
+        { key: 'tepat_waktu', width: 10 },
         { key: 'terlambat', width: 12 },
-        { key: 'total_keterlambatan', width: 20 },
-        { key: 'tidak_hadir', width: 13 },
+        { key: 'total_keterlambatan', width: 15 },
+        { key: 'tidak_hadir', width: 10 },
         { key: 'total_jam_kerja', width: 16 },
-        { key: 'hari_kerja_efektif', width: 18 },
-        { key: 'persentase_kehadiran', width: 20 },
+        { key: 'hari_kerja_efektif', width: 10 },
+        { key: 'persentase_kehadiran', width: 13 },
     ];
 
     // ── Header row ────────────────────────────────────────────────────────────
