@@ -4,6 +4,51 @@ const presensiModel = require('../models/presensiModel');
 const { generateLaporanPenilaianExcel, generateRekapBulananExcel } = require('../services/exportService');
 const { buildRowsWithAbsent } = require('./presensiController');
 
+/**
+ * Reusable: hitung rekap bulanan per pegawai (dipakai oleh getRekapBulanan & dashboard).
+ */
+const buildRekapBulananData = async (bulan, tahun, name) => {
+    const rows = await laporanModel.getRekapBulananData(bulan, tahun, name);
+    const jadwalRows = await jadwalModel.getJadwalPegawaiData(bulan, tahun, name);
+    const daysInMonth = new Date(tahun, bulan, 0).getDate();
+
+    const jadwalMap = {};
+    jadwalRows.forEach(j => {
+        let totalJadwalKerja = 0;
+        for (let i = 1; i <= daysInMonth; i++) {
+            const shiftCode = j[`h${i}`];
+            if (shiftCode && shiftCode.trim() !== '' &&
+                shiftCode.trim().toUpperCase() !== 'L' &&
+                shiftCode.trim().toUpperCase() !== 'OFF') {
+                totalJadwalKerja++;
+            }
+        }
+        jadwalMap[j.nama_pegawai] = totalJadwalKerja;
+    });
+
+    return rows.map((item, index) => {
+        const hariKerjaEfektif = jadwalMap[item.nama_pegawai] || 20;
+        const jumlahHadir = parseInt(item.jumlah_hadir) || 0;
+        const tidakHadir = Math.max(0, hariKerjaEfektif - jumlahHadir);
+        const persentase = hariKerjaEfektif > 0
+            ? Math.round((jumlahHadir / hariKerjaEfektif) * 100)
+            : 0;
+
+        return {
+            no: index + 1,
+            nama_pegawai: item.nama_pegawai,
+            jumlah_hadir: `${jumlahHadir} hari`,
+            tepat_waktu: parseInt(item.tepat_waktu) || 0,
+            terlambat: parseInt(item.terlambat) || 0,
+            total_keterlambatan: item.total_keterlambatan ? String(item.total_keterlambatan).split('.')[0] : '00:00:00',
+            tidak_hadir: tidakHadir,
+            total_jam_kerja: item.total_jam_kerja ? String(item.total_jam_kerja).split('.')[0] : '00:00:00',
+            hari_kerja_efektif: hariKerjaEfektif,
+            persentase_kehadiran: `${persentase}%`,
+        };
+    });
+};
+
 const getRekapPenilaian = async (req, res) => {
     try {
         const { startDate, endDate, name } = req.query;
@@ -75,67 +120,9 @@ const getRekapBulanan = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Parameter tahun tidak valid.' });
         }
 
-        // 1. Ambil agregasi presensi dari DB
-        const rows = await laporanModel.getRekapBulananData(bulan, tahun, name);
+        const resultData = await buildRekapBulananData(bulan, tahun, name);
 
-        // 2. Ambil jadwal untuk menghitung hari kerja efektif & tidak hadir
-        const jadwalRows = await jadwalModel.getJadwalPegawaiData(bulan, tahun, name);
-        const daysInMonth = new Date(tahun, bulan, 0).getDate();
-
-        const jadwalMap = {};
-        jadwalRows.forEach(j => {
-            let totalJadwalKerja = 0;
-            for (let i = 1; i <= daysInMonth; i++) {
-                const shiftCode = j[`h${i}`];
-                if (shiftCode && shiftCode.trim() !== '' &&
-                    shiftCode.trim().toUpperCase() !== 'L' &&
-                    shiftCode.trim().toUpperCase() !== 'OFF') {
-                    totalJadwalKerja++;
-                }
-            }
-            jadwalMap[j.nama_pegawai] = totalJadwalKerja;
-        });
-
-        // 3. Gabungkan & hitung kolom turunan
-        const resultData = rows.map((item, index) => {
-            const hariKerjaEfektif = jadwalMap[item.nama_pegawai] || 20;
-            const jumlahHadir = parseInt(item.jumlah_hadir) || 0;
-            const tidakHadir = Math.max(0, hariKerjaEfektif - jumlahHadir);
-            const persentase = hariKerjaEfektif > 0
-                ? Math.round((jumlahHadir / hariKerjaEfektif) * 100)
-                : 0;
-
-            // Format total_jam_kerja: buang .000000 jika ada
-            const totalJamKerja = item.total_jam_kerja
-                ? String(item.total_jam_kerja).split('.')[0]
-                : '00:00:00';
-
-            // Format total_keterlambatan
-            const totalKeterlambatan = item.total_keterlambatan
-                ? String(item.total_keterlambatan).split('.')[0]
-                : '00:00:00';
-
-            return {
-                no: index + 1,
-                nama_pegawai: item.nama_pegawai,
-                jumlah_hadir: `${jumlahHadir} hari`,
-                tepat_waktu: parseInt(item.tepat_waktu) || 0,
-                terlambat: parseInt(item.terlambat) || 0,
-                total_keterlambatan: totalKeterlambatan,
-                tidak_hadir: tidakHadir,
-                total_jam_kerja: totalJamKerja,
-                hari_kerja_efektif: hariKerjaEfektif,
-                persentase_kehadiran: `${persentase}%`,
-            };
-        });
-
-        res.json({
-            success: true,
-            bulan,
-            tahun,
-            data: resultData,
-        });
-
+        res.json({ success: true, bulan, tahun, data: resultData });
     } catch (error) {
         console.error('Error getRekapBulanan:', error);
         res.status(500).json({ success: false, message: error.message });
@@ -282,4 +269,5 @@ module.exports = {
     getRekapBulanan,
     downloadRekapBulananExcel,
     downloadLaporanExcel,
+    buildRekapBulananData
 };

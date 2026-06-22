@@ -1,5 +1,6 @@
 const jadwalModel = require('../models/jadwalModel');
 const exportService = require('../services/exportService');
+const { isExcludedPegawai } = require('../utils/excludedPegawai');
 
 const getJadwalPegawai = async (req, res) => {
   try {
@@ -9,7 +10,8 @@ const getJadwalPegawai = async (req, res) => {
     const targetYear = tahun ? parseInt(tahun) : new Date().getFullYear();
 
     // 1. Ambil data jadwal dasar
-    const jadwalRows = await jadwalModel.getJadwalPegawaiData(targetMonth, targetYear, name);
+    const jadwalRowsRaw = await jadwalModel.getJadwalPegawaiData(targetMonth, targetYear, name);
+    const jadwalRows = jadwalRowsRaw.filter(row => !isExcludedPegawai(row.nama_pegawai));
 
     // 2. Ambil referensi jam & format ke hh:mm (buang detik)
     const jamRows = await jadwalModel.getJamMasukData();
@@ -93,7 +95,8 @@ const downloadJadwalExcel = async (req, res) => {
     const targetMonth = bulan ? parseInt(bulan) : new Date().getMonth() + 1;
     const targetYear = tahun ? parseInt(tahun) : new Date().getFullYear();
 
-    const jadwalRows = await jadwalModel.getJadwalPegawaiData(targetMonth, targetYear, name);
+    const jadwalRowsRaw = await jadwalModel.getJadwalPegawaiData(targetMonth, targetYear, name);
+    const jadwalRows = jadwalRowsRaw.filter(row => !isExcludedPegawai(row.nama_pegawai));
 
     const jamRows = await jadwalModel.getJamMasukData();
     const jamMap = {};

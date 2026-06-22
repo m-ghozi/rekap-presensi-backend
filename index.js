@@ -8,6 +8,7 @@ const jadwalRoutes = require('./routes/jadwalRoutes');
 const authRoutes = require('./routes/authRoutes');
 const laporanRoutes = require('./routes/laporanRoutes');
 const pegawaiRoutes = require('./routes/pegawaiRoutes');
+const dashboardRoutes = require('./routes/dashboardRoutes');
 const { authenticateToken } = require('./middlewares/auth');
 
 const app = express();
@@ -44,6 +45,7 @@ app.use('/api/presensi', limiter, authenticateToken, presensiRoutes);        // 
 app.use('/api/jadwal', limiter, authenticateToken, jadwalRoutes);            // Butuh JWT
 app.use('/api/laporan', limiter, authenticateToken, laporanRoutes);          // Butuh JWT
 app.use('/api/pegawai', limiter, authenticateToken, pegawaiRoutes);          // Butuh JWT
+app.use('/api/dashboard', limiter, authenticateToken, dashboardRoutes);
 
 // Cek koneksi server
 app.listen(PORT, () => {
