@@ -10,7 +10,7 @@ const getRekapPenilaianData = async (startDate, endDate, name) => {
             -- Breakdown status absensi
             SUM(CASE WHEN rp.status IN ('Tepat Waktu', 'Tepat Waktu & PSW', 'Terlambat Toleransi') THEN 1 ELSE 0 END) AS tepat_waktu,
             SUM(CASE WHEN rp.status = 'Terlambat I' THEN 1 ELSE 0 END) AS terlambat_1,
-            SUM(CASE WHEN rp.status = 'Terlambat II' THEN 1 ELSE 0 END) AS terlambat_2,
+            SUM(CASE WHEN rp.status IN ('Terlambat II', 'Terlambat II & PSW') THEN 1 ELSE 0 END) AS terlambat_2,
             SUM(CASE WHEN rp.status = 'Tidak Hadir' THEN 1 ELSE 0 END) AS tidak_hadir,
             
             -- Akumulasi durasi kerja (menjumlahkan waktu)

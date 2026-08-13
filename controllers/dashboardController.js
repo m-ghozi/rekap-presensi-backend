@@ -3,8 +3,8 @@ const presensiModel = require('../models/presensiModel');
 const { buildRekapBulananData } = require('./laporanController');
 const { isExcludedPegawai } = require('../utils/excludedPegawai');
 
-const STATUS_TEPAT_WAKTU = ['Tepat Waktu', 'Terlambat Toleransi'];
-const STATUS_TERLAMBAT = ['Terlambat I', 'Terlambat II'];
+const STATUS_TEPAT_WAKTU = ['Tepat Waktu', 'Tepat Waktu & PSW', 'Terlambat Toleransi'];
+const STATUS_TERLAMBAT = ['Terlambat I', 'Terlambat II', 'Terlambat II & PSW'];
 
 const isShiftAktif = (kode) => {
     if (!kode) return false;

@@ -1,0 +1,44 @@
+diff --git a/controllers/dashboardController.js b/controllers/dashboardController.js
+index 30a296e..3e275bb 100644
+--- a/controllers/dashboardController.js
++++ b/controllers/dashboardController.js
+@@ -3,8 +3,8 @@ const presensiModel = require('../models/presensiModel');
+ const { buildRekapBulananData } = require('./laporanController');
+ const { isExcludedPegawai } = require('../utils/excludedPegawai');
+ 
+-const STATUS_TEPAT_WAKTU = ['Tepat Waktu', 'Terlambat Toleransi'];
+-const STATUS_TERLAMBAT = ['Terlambat I', 'Terlambat II'];
++const STATUS_TEPAT_WAKTU = ['Tepat Waktu', 'Tepat Waktu & PSW', 'Terlambat Toleransi'];
++const STATUS_TERLAMBAT = ['Terlambat I', 'Terlambat II', 'Terlambat II & PSW'];
+ 
+ const isShiftAktif = (kode) => {
+     if (!kode) return false;
+diff --git a/models/laporanModel.js b/models/laporanModel.js
+index 82dc448..ed9d28f 100644
+--- a/models/laporanModel.js
++++ b/models/laporanModel.js
+@@ -10,7 +10,7 @@ const getRekapPenilaianData = async (startDate, endDate, name) => {
+             -- Breakdown status absensi
+             SUM(CASE WHEN rp.status IN ('Tepat Waktu', 'Tepat Waktu & PSW', 'Terlambat Toleransi') THEN 1 ELSE 0 END) AS tepat_waktu,
+             SUM(CASE WHEN rp.status = 'Terlambat I' THEN 1 ELSE 0 END) AS terlambat_1,
+-            SUM(CASE WHEN rp.status = 'Terlambat II' THEN 1 ELSE 0 END) AS terlambat_2,
++            SUM(CASE WHEN rp.status IN ('Terlambat II', 'Terlambat II & PSW') THEN 1 ELSE 0 END) AS terlambat_2,
+             SUM(CASE WHEN rp.status = 'Tidak Hadir' THEN 1 ELSE 0 END) AS tidak_hadir,
+             
+             -- Akumulasi durasi kerja (menjumlahkan waktu)
+diff --git a/services/exportService.js b/services/exportService.js
+index 9da8cd5..3230126 100644
+--- a/services/exportService.js
++++ b/services/exportService.js
+@@ -269,9 +269,11 @@ const generateLaporanPenilaianExcel = async (laporan, riwayat, params = {}) => {
+     const statusStyle = (status) => {
+         switch (status) {
+             case 'Tepat Waktu': return { bg: 'E8F5E9', fg: C.GREEN };
++            case 'Tepat Waktu & PSW': return { bg: 'E8F5E9', fg: C.GREEN };
+             case 'Terlambat Toleransi': return { bg: 'E8F5E9', fg: C.GREEN };
+             case 'Terlambat I': return { bg: 'FFF3E0', fg: C.ORANGE };
+             case 'Terlambat II': return { bg: 'FFEBEE', fg: C.RED };
++            case 'Terlambat II & PSW': return { bg: 'FFEBEE', fg: C.RED };
+             default: return { bg: 'FFEBEE', fg: C.RED };
+         }
+     };
