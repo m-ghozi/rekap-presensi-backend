@@ -5,10 +5,10 @@ const getRekapPenilaianData = async (startDate, endDate, name) => {
         SELECT 
             p.nama AS nama_pegawai,
             -- Hitung total hari hadir (status selain 'Tidak Hadir')
-            SUM(CASE WHEN rp.status IN ('Tepat Waktu', 'Terlambat Toleransi', 'Terlambat I', 'Terlambat II') THEN 1 ELSE 0 END) AS total_hadir,
+            SUM(CASE WHEN rp.status IN ('Tepat Waktu', 'Tepat Waktu & PSW', 'Terlambat Toleransi', 'Terlambat I', 'Terlambat II', 'Terlambat II & PSW') THEN 1 ELSE 0 END) AS total_hadir,
             
             -- Breakdown status absensi
-            SUM(CASE WHEN rp.status IN ('Tepat Waktu', 'Terlambat Toleransi') THEN 1 ELSE 0 END) AS tepat_waktu,
+            SUM(CASE WHEN rp.status IN ('Tepat Waktu', 'Tepat Waktu & PSW', 'Terlambat Toleransi') THEN 1 ELSE 0 END) AS tepat_waktu,
             SUM(CASE WHEN rp.status = 'Terlambat I' THEN 1 ELSE 0 END) AS terlambat_1,
             SUM(CASE WHEN rp.status = 'Terlambat II' THEN 1 ELSE 0 END) AS terlambat_2,
             SUM(CASE WHEN rp.status = 'Tidak Hadir' THEN 1 ELSE 0 END) AS tidak_hadir,
@@ -62,15 +62,15 @@ const getRekapBulananData = async (bulan, tahun, name) => {
             p.nama                                                              AS nama_pegawai,
 
             -- Jumlah hari hadir (semua status kecuali Tidak Hadir)
-            SUM(CASE WHEN rp.status IN ('Tepat Waktu', 'Terlambat Toleransi', 'Terlambat I', 'Terlambat II')
+            SUM(CASE WHEN rp.status IN ('Tepat Waktu', 'Tepat Waktu & PSW', 'Terlambat Toleransi', 'Terlambat I', 'Terlambat II', 'Terlambat II & PSW')
                 THEN 1 ELSE 0 END)                                              AS jumlah_hadir,
 
-            -- Tepat waktu (termasuk toleransi)
-            SUM(CASE WHEN rp.status IN ('Tepat Waktu', 'Terlambat Toleransi')
+            -- Tepat waktu (HANYA status "Tepat Waktu" atau "Tepat Waktu & PSW")
+            SUM(CASE WHEN rp.status IN ('Tepat Waktu', 'Tepat Waktu & PSW')
                 THEN 1 ELSE 0 END)                                              AS tepat_waktu,
 
-            -- Total hari terlambat (I + II)
-            SUM(CASE WHEN rp.status IN ('Terlambat I', 'Terlambat II')
+            -- Total hari terlambat (I + II, termasuk II & PSW)
+            SUM(CASE WHEN rp.status IN ('Terlambat I', 'Terlambat II', 'Terlambat II & PSW')
                 THEN 1 ELSE 0 END)                                              AS terlambat,
 
             -- Akumulasi durasi keterlambatan dalam format HH:mm:ss

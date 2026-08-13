@@ -30,15 +30,20 @@ const buildRekapBulananData = async (bulan, tahun, name) => {
         const hariKerjaEfektif = jadwalMap[item.nama_pegawai] || 20;
         const jumlahHadir = parseInt(item.jumlah_hadir) || 0;
         const tidakHadir = Math.max(0, hariKerjaEfektif - jumlahHadir);
+        const tepatWaktu = parseInt(item.tepat_waktu) || 0;
         const persentase = hariKerjaEfektif > 0
             ? Math.round((jumlahHadir / hariKerjaEfektif) * 100)
+            : 0;
+        const psw = hariKerjaEfektif > 0
+            ? Math.round((tepatWaktu / hariKerjaEfektif) * 100)
             : 0;
 
         return {
             no: index + 1,
             nama_pegawai: item.nama_pegawai,
             jumlah_hadir: `${jumlahHadir} hari`,
-            tepat_waktu: parseInt(item.tepat_waktu) || 0,
+            tepat_waktu: tepatWaktu,
+            psw: `${psw}%`,
             terlambat: parseInt(item.terlambat) || 0,
             total_keterlambatan: item.total_keterlambatan ? String(item.total_keterlambatan).split('.')[0] : '00:00:00',
             tidak_hadir: tidakHadir,
@@ -82,13 +87,18 @@ const getRekapPenilaian = async (req, res) => {
 
         const resultData = rows.map(item => {
             const HARI_KERJA_EFEKTIF = jadwalMap[item.nama_pegawai] || 20;
+            const tepatWaktu = parseInt(item.tepat_waktu) || 0;
             const persentase = item.total_hadir > 0
                 ? Math.round((item.total_hadir / HARI_KERJA_EFEKTIF) * 100)
+                : 0;
+            const psw = HARI_KERJA_EFEKTIF > 0
+                ? Math.round((tepatWaktu / HARI_KERJA_EFEKTIF) * 100)
                 : 0;
             const hitung_tidak_hadir = Math.max(0, HARI_KERJA_EFEKTIF - item.total_hadir);
 
             return {
                 ...item,
+                psw: `${psw}%`,
                 tidak_hadir: hitung_tidak_hadir,
                 hari_kerja_efektif: HARI_KERJA_EFEKTIF,
                 persentase_kehadiran: `${persentase}%`,
@@ -159,15 +169,20 @@ const downloadRekapBulananExcel = async (req, res) => {
             const hariKerjaEfektif = jadwalMap[item.nama_pegawai] || 20;
             const jumlahHadir = parseInt(item.jumlah_hadir) || 0;
             const tidakHadir = Math.max(0, hariKerjaEfektif - jumlahHadir);
+            const tepatWaktu = parseInt(item.tepat_waktu) || 0;
             const persentase = hariKerjaEfektif > 0
                 ? Math.round((jumlahHadir / hariKerjaEfektif) * 100)
+                : 0;
+            const psw = hariKerjaEfektif > 0
+                ? Math.round((tepatWaktu / hariKerjaEfektif) * 100)
                 : 0;
 
             return {
                 no: index + 1,
                 nama_pegawai: item.nama_pegawai,
                 jumlah_hadir: jumlahHadir,
-                tepat_waktu: parseInt(item.tepat_waktu) || 0,
+                tepat_waktu: tepatWaktu,
+                psw: `${psw}%`,
                 terlambat: parseInt(item.terlambat) || 0,
                 total_keterlambatan: item.total_keterlambatan
                     ? String(item.total_keterlambatan).split('.')[0]
@@ -233,10 +248,14 @@ const downloadLaporanExcel = async (req, res) => {
 
         const laporanData = laporanRows.map(item => {
             const HARI_KERJA_EFEKTIF = jadwalMap[item.nama_pegawai] || 20;
+            const tepatWaktu = parseInt(item.tepat_waktu) || 0;
             const persentase = item.total_hadir > 0
                 ? Math.round((item.total_hadir / HARI_KERJA_EFEKTIF) * 100) : 0;
+            const psw = HARI_KERJA_EFEKTIF > 0
+                ? Math.round((tepatWaktu / HARI_KERJA_EFEKTIF) * 100) : 0;
             return {
                 ...item,
+                psw: `${psw}%`,
                 tidak_hadir: Math.max(0, HARI_KERJA_EFEKTIF - item.total_hadir),
                 hari_kerja_efektif: HARI_KERJA_EFEKTIF,
                 persentase_kehadiran: `${persentase}%`,
