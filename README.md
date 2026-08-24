@@ -77,7 +77,8 @@ Sebagian besar API dilindungi (Protected) dan membutuhkan Header Authorization: 
   
 - **Presensi**
   - `GET /api/presensi/status` - Melihat status presensi
-  - `GET /api/presensi/today` - Melihat data presensi hari ini
+  - `GET /api/presensi/today` - Melihat data presensi hari ini (hanya yang sudah absen)
+  - `GET /api/presensi/harian` - Melihat presensi harian seluruh pegawai (tanpa terpaku jadwal, mendukung query `date` dan `name`)
   - `GET /api/presensi` - Melihat semua data presensi (mendukung query parameter `startDate`, `endDate`, `name`)
 
 - **Jadwal**

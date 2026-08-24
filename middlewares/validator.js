@@ -86,4 +86,28 @@ const validateJadwalQuery = [
   }
 ];
 
-module.exports = { validatePresensiQuery, validateJadwalQuery };
+const validatePresensiHarianQuery = [
+  query('date')
+    .optional({ checkFalsy: true })
+    .isISO8601()
+    .withMessage('Format tanggal harus YYYY-MM-DD'),
+
+  query('name')
+    .optional({ checkFalsy: true })
+    .isString()
+    .isLength({ min: 1 })
+    .withMessage('Nama harus berupa teks'),
+
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        errors: errors.array().map(err => ({ field: err.path, message: err.msg }))
+      });
+    }
+    next();
+  }
+];
+
+module.exports = { validatePresensiQuery, validateJadwalQuery, validatePresensiHarianQuery };

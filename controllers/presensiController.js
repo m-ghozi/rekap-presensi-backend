@@ -1,6 +1,7 @@
 const presensiModel = require('../models/presensiModel');
 const jadwalModel   = require('../models/jadwalModel');
 const exportService = require('../services/exportService');
+const { isExcludedPegawai } = require('../utils/excludedPegawai');
 
 const getLocalYYYYMMDD = (date) => {
     const d = new Date(date);
@@ -121,10 +122,30 @@ const getTodayPresensi = async (req, res) => {
     }
 };
 
+/**
+ * Presensi Harian Seluruh Pegawai (Tanpa Terpaku Jadwal)
+ * GET /api/presensi/harian?date=YYYY-MM-DD&name=...
+ */
+const getPresensiHarian = async (req, res) => {
+    try {
+        const targetDate = req.query.date || getLocalYYYYMMDD(new Date());
+        const { name } = req.query;
+
+        const rawRows = await presensiModel.getPresensiHarianSemuaPegawaiData(targetDate, name);
+        const rows = rawRows.filter(r => !isExcludedPegawai(r.nama_pegawai));
+
+        res.json({ success: true, date: targetDate, data: rows });
+    } catch (error) {
+        console.error('Error getPresensiHarian:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
 module.exports = {
     buildRowsWithAbsent,
     getRekapPresensi,
     getTableStatus,
     downloadExcel,
-    getTodayPresensi
+    getTodayPresensi,
+    getPresensiHarian
 };
