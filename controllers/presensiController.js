@@ -141,11 +141,36 @@ const getPresensiHarian = async (req, res) => {
     }
 };
 
+/**
+ * Download Excel Presensi Harian Seluruh Pegawai
+ * GET /api/presensi/harian/download?date=YYYY-MM-DD&name=...
+ */
+const downloadPresensiHarianExcel = async (req, res) => {
+    try {
+        const targetDate = req.query.date || getLocalYYYYMMDD(new Date());
+        const { name } = req.query;
+
+        const rawRows = await presensiModel.getPresensiHarianSemuaPegawaiData(targetDate, name);
+        const rows = rawRows.filter(r => !isExcludedPegawai(r.nama_pegawai));
+
+        const excelBuffer = await exportService.generatePresensiHarianExcel(rows, targetDate);
+
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', `attachment; filename=presensi_harian_${targetDate}.xlsx`);
+
+        res.send(excelBuffer);
+    } catch (error) {
+        console.error('Error downloadPresensiHarianExcel:', error);
+        res.status(500).json({ success: false, message: 'Gagal membuat file Excel presensi harian' });
+    }
+};
+
 module.exports = {
     buildRowsWithAbsent,
     getRekapPresensi,
     getTableStatus,
     downloadExcel,
     getTodayPresensi,
-    getPresensiHarian
+    getPresensiHarian,
+    downloadPresensiHarianExcel
 };

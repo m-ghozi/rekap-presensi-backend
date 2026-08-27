@@ -508,9 +508,168 @@ const generateRekapBulananExcel = async (data, bulan, tahun) => {
     return workbook.xlsx.writeBuffer();
 };
 
+/**
+ * Generate Excel Presensi Harian Seluruh Pegawai
+ * @param {Array}  data       - Data presensi harian pegawai
+ * @param {string} targetDate - Tanggal format YYYY-MM-DD
+ */
+const generatePresensiHarianExcel = async (data, targetDate) => {
+    const workbook = new ExcelJS.Workbook();
+    workbook.creator = 'Sistem Rekap Presensi';
+    workbook.created = new Date();
+
+    const C = {
+        BLUE_DARK: '1565C0',
+        BLUE_MID: '1976D2',
+        BLUE_LIGHT: 'E3F2FD',
+        WHITE: 'FFFFFF',
+        GREEN: '2E7D32',
+        ORANGE: 'E65100',
+        RED: 'C62828',
+        GREY_LIGHT: 'F5F5F5',
+        GREY_BORDER: 'BDBDBD',
+    };
+
+    const fill = (hex) => ({ type: 'pattern', pattern: 'solid', fgColor: { argb: hex } });
+    const thin = (hex = C.GREY_BORDER) => ({ style: 'thin', color: { argb: hex } });
+    const border = () => ({ left: thin(), right: thin(), top: thin(), bottom: thin() });
+    const center = (wrap = false) => ({ horizontal: 'center', vertical: 'middle', wrapText: wrap });
+    const left = (wrap = false) => ({ horizontal: 'left', vertical: 'middle', wrapText: wrap });
+    const font = (opts = {}) => ({ name: 'Arial', size: 10, ...opts });
+
+    const ws = workbook.addWorksheet('Presensi Harian');
+
+    // Title
+    ws.mergeCells('A1:I1');
+    Object.assign(ws.getCell('A1'), {
+        value: 'REKAP PRESENSI HARIAN PEGAWAI',
+        font: font({ size: 14, bold: true, color: { argb: C.WHITE } }),
+        fill: fill(C.BLUE_DARK),
+        alignment: center(),
+    });
+    ws.getRow(1).height = 36;
+
+    // Subtitle
+    ws.mergeCells('A2:I2');
+    Object.assign(ws.getCell('A2'), {
+        value: `Tanggal: ${targetDate || 'Hari Ini'}`,
+        font: font({ size: 10, color: { argb: '555555' } }),
+        fill: fill('EEF2F7'),
+        alignment: center(),
+    });
+    ws.getRow(2).height = 22;
+
+    // Column Widths
+    const COL_DEFS = [
+        { key: 'A', width: 6 },
+        { key: 'B', width: 35 },
+        { key: 'C', width: 25 },
+        { key: 'D', width: 20 },
+        { key: 'E', width: 20 },
+        { key: 'F', width: 20 },
+        { key: 'G', width: 15 },
+        { key: 'H', width: 12 },
+        { key: 'I', width: 30 },
+    ];
+    COL_DEFS.forEach(({ key, width }) => ws.getColumn(key).width = width);
+
+    // Headers
+    const HDR_ROW = 4;
+    const HEADERS = ['No', 'Nama Pegawai', 'Shift', 'Jam Datang', 'Jam Pulang', 'Status', 'Keterlambatan', 'Durasi', 'Keterangan'];
+    const HDR_KEYS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'];
+
+    ws.getRow(HDR_ROW).height = 28;
+    HEADERS.forEach((h, i) => {
+        const c = ws.getCell(`${HDR_KEYS[i]}${HDR_ROW}`);
+        c.value = h;
+        c.font = font({ bold: true, color: { argb: C.WHITE } });
+        c.fill = fill(C.BLUE_MID);
+        c.alignment = center(true);
+        c.border = border();
+    });
+
+    const statusStyle = (status) => {
+        switch (status) {
+            case 'Tepat Waktu':
+            case 'Tepat Waktu & PSW':
+            case 'Terlambat Toleransi':
+                return { bg: 'E8F5E9', fg: C.GREEN };
+            case 'Terlambat I':
+                return { bg: 'FFF3E0', fg: C.ORANGE };
+            case 'Terlambat II':
+            case 'Terlambat II & PSW':
+            case 'Tidak Hadir':
+                return { bg: 'FFEBEE', fg: C.RED };
+            case 'Belum Hadir':
+                return { bg: 'F5F5F5', fg: '757575' };
+            default:
+                return { bg: 'FFEBEE', fg: C.RED };
+        }
+    };
+
+    const fmtDate = (d) => {
+        if (!d) return '-';
+        const dt = new Date(d);
+        if (isNaN(dt.getTime())) return '-';
+        const pad = (n) => String(n).padStart(2, '0');
+        return `${pad(dt.getDate())}/${pad(dt.getMonth() + 1)}/${dt.getFullYear()} `
+            + `${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
+    };
+
+    data.forEach((row, idx) => {
+        const r = HDR_ROW + 1 + idx;
+        const bg = idx % 2 === 0 ? C.BLUE_LIGHT : C.WHITE;
+        ws.getRow(r).height = 22;
+
+        const { bg: sBg, fg: sFg } = statusStyle(row.status);
+        const rowValues = [
+            idx + 1,
+            row.nama_pegawai,
+            row.shift || '-',
+            fmtDate(row.jam_datang),
+            fmtDate(row.jam_pulang),
+            row.status || 'Belum Hadir',
+            row.keterlambatan || '-',
+            row.durasi || '-',
+            row.keterangan || '-',
+        ];
+
+        rowValues.forEach((val, ci) => {
+            const c = ws.getCell(`${HDR_KEYS[ci]}${r}`);
+            c.value = val;
+            c.alignment = ci === 1 ? left(true) : center(true);
+            c.border = border();
+
+            if (ci === 5) { // Status
+                c.font = font({ size: 9, bold: true, color: { argb: sFg } });
+                c.fill = fill(sBg);
+            } else if (ci === 6 && val !== '-') { // Keterlambatan
+                c.font = font({ size: 9, bold: true, color: { argb: C.RED } });
+                c.fill = fill(bg);
+            } else if (ci === 7 && val !== '-') { // Durasi
+                c.font = font({ size: 9, bold: true, color: { argb: C.GREEN } });
+                c.fill = fill(bg);
+            } else {
+                c.font = font({ color: { argb: '212121' } });
+                c.fill = fill(bg);
+            }
+        });
+    });
+
+    ws.views = [{ state: 'frozen', ySplit: HDR_ROW }];
+    ws.pageSetup.orientation = 'landscape';
+    ws.pageSetup.fitToPage = true;
+    ws.pageSetup.fitToWidth = 1;
+    ws.pageSetup.fitToHeight = 0;
+    ws.pageSetup.printTitlesRow = `1:4`;
+
+    return workbook.xlsx.writeBuffer();
+};
+
 module.exports = {
     generateExcel,
     generateJadwalExcel,
     generateLaporanPenilaianExcel,
-    generateRekapBulananExcel
+    generateRekapBulananExcel,
+    generatePresensiHarianExcel
 };

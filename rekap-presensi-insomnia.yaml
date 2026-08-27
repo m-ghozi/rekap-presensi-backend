@@ -213,6 +213,38 @@ collection:
                 send: true
                 store: true
               rebuildPath: true
+          - url: "{{ _['{% request \\'url\\', \\'\\', 0 %}'] }}/api/presensi/harian/download"
+            name: presensi/harian/download
+            meta:
+              id: req_f8b90a21ca3c59abb42gf9378fd78392
+              created: 1777365100000
+              modified: 1777365100000
+              isPrivate: false
+              description: ""
+              sortKey: -1777103148540
+            method: GET
+            parameters:
+              - name: date
+                value: 2026-04-01
+                description: ""
+                disabled: false
+              - name: name
+                value: ""
+                description: ""
+                disabled: false
+            headers:
+              - name: User-Agent
+                value: insomnia/12.5.0
+                description: ""
+                disabled: false
+            settings:
+              renderRequestBody: true
+              encodeUrl: true
+              followRedirects: global
+              cookies:
+                send: true
+                store: true
+              rebuildPath: true
           - url: "{{ _['{% request \\'url\\', \\'\\', 0 %}'] }}/api/presensi"
 
             name: presensi

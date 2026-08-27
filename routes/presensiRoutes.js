@@ -5,6 +5,7 @@ const { validatePresensiQuery, validatePresensiHarianQuery } = require('../middl
 
 router.get('/today', presensiController.getTodayPresensi);
 router.get('/harian', validatePresensiHarianQuery, presensiController.getPresensiHarian);
+router.get('/harian/download', validatePresensiHarianQuery, presensiController.downloadPresensiHarianExcel);
 router.get('/', validatePresensiQuery, presensiController.getRekapPresensi);
 router.get('/status', presensiController.getTableStatus);
 router.get('/download', validatePresensiQuery, presensiController.downloadExcel);
