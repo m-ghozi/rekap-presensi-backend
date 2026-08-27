@@ -182,10 +182,48 @@ const getTodayPresensiData = async () => {
     return rows;
 };
 
+const getPresensiHarianSemuaPegawaiData = async (targetDate, name) => {
+    let query = `
+        SELECT 
+            p.nama AS nama_pegawai, 
+            CASE 
+                WHEN rp.shift IS NOT NULL AND jm.jam_masuk IS NOT NULL 
+                    THEN CONCAT(rp.shift, ' (', TIME_FORMAT(jm.jam_masuk, '%H:%i'), ' - ', TIME_FORMAT(jm.jam_pulang, '%H:%i'), ')')
+                WHEN rp.shift IS NOT NULL 
+                    THEN rp.shift
+                ELSE NULL 
+            END AS shift, 
+            rp.jam_datang, 
+            rp.jam_pulang, 
+            COALESCE(rp.status, 'Belum Hadir') AS status, 
+            rp.keterlambatan, 
+            rp.durasi, 
+            rp.keterangan 
+        FROM pegawai p
+        LEFT JOIN rekap_presensi rp 
+            ON p.id = rp.id AND DATE(rp.jam_datang) = ?
+        LEFT JOIN jam_masuk jm 
+            ON rp.shift = jm.shift
+        WHERE p.stts_aktif = 'AKTIF'
+    `;
+    const params = [targetDate];
+
+    if (name) {
+        query += ` AND p.nama LIKE ?`;
+        params.push(`%${name}%`);
+    }
+
+    query += ` ORDER BY p.nama ASC`;
+
+    const [rows] = await db.query(query, params);
+    return rows;
+};
+
 module.exports = {
     getRekapPresensiData,
     getPegawaiDenganJadwal,
     getRekapPresensiForExport,
     getTableStatusData,
-    getTodayPresensiData
+    getTodayPresensiData,
+    getPresensiHarianSemuaPegawaiData
 };
