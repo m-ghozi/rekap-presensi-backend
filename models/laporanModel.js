@@ -65,8 +65,8 @@ const getRekapBulananData = async (bulan, tahun, name) => {
             SUM(CASE WHEN rp.status IN ('Tepat Waktu', 'Tepat Waktu & PSW', 'Terlambat Toleransi', 'Terlambat I', 'Terlambat II', 'Terlambat II & PSW')
                 THEN 1 ELSE 0 END)                                              AS jumlah_hadir,
 
-            -- Tepat waktu (HANYA status "Tepat Waktu" atau "Tepat Waktu & PSW")
-            SUM(CASE WHEN rp.status IN ('Tepat Waktu', 'Tepat Waktu & PSW')
+            -- Tepat waktu (termasuk "Terlambat Toleransi" — dianggap hadir/tepat waktu)
+            SUM(CASE WHEN rp.status IN ('Tepat Waktu', 'Tepat Waktu & PSW', 'Terlambat Toleransi')
                 THEN 1 ELSE 0 END)                                              AS tepat_waktu,
 
             -- Total hari terlambat (I + II, termasuk II & PSW)
